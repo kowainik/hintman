@@ -1,7 +1,7 @@
 module Main (main) where
 
-import Hintman (someFunc)
+import Hintman.App (runHintman)
 
 
 main :: IO ()
-main = someFunc
+main = runHintman
