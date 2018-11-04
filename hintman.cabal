@@ -26,6 +26,7 @@ library
                        Hintman
                            Hintman.Cli
                            Hintman.Config
+                           Hintman.GitHub.Auth
                            Hintman.Server
                                Hintman.Server.Auth
                            Hintman.Suggestion.Core
@@ -33,14 +34,16 @@ library
                            Hintman.Suggestion.TrailingSpaces
 
   build-depends:       base-noprelude >= 4.11 && < 4.12
-                     , optparse-applicative ^>= 0.14.3
-                     , relude ^>= 0.3.0
                      , containers
+                     , optparse-applicative ^>= 0.14.3
+                     , jwt ^>= 0.7.2
+                     , relude ^>= 0.3.0
                      , servant ^>= 0.14.1
                      , servant-server ^>= 0.14.1
                      , text ^>= 1.2.3
                      , tomland ^>= 0.4.0
-                     , transformers >= 0.3
+                     , time >= 1.8 && < 1.10
+                     , transformers ^>= 0.5.5.0
                      , wai ^>= 3.2
                      , warp ^>= 3.2
 

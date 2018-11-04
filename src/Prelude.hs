@@ -5,3 +5,4 @@ module Prelude
        ) where
 
 import Relude
+import Relude.Extra.Newtype as Relude (un)
