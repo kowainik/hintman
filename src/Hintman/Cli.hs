@@ -3,23 +3,34 @@ module Hintman.Cli
     , cliContext
     ) where
 
-import Options.Applicative (Parser, execParser, fullDesc, help,
-                            helper, info, long, progDesc, short, switch)
+import Options.Applicative (Parser, auto, execParser, fullDesc, help,
+                            helper, info, long, metavar, option, progDesc,
+                            short, showDefault, switch, value)
 
 
 -- | Represents the applicaiton settings
-newtype Context = Context
+data Context = Context
     { contextLogging :: Bool
+    , contextPort :: Int
     }
     
 parseContext :: Parser Context
 parseContext = Context
     <$> parseLogging
+    <*> parsePort
   where
     parseLogging = switch 
         (  long "logging"
         <> short 'l'
         <> help "Enable logging"
+        )
+    parsePort = option auto
+        (  long "port"
+        <> short 'p'
+        <> metavar "PORTNUMBER"
+        <> value 3000
+        <> showDefault
+        <> help "Configure the port to run on"
         )
     
 {- | Parse out the context from command line arguments

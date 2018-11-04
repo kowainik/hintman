@@ -22,5 +22,6 @@ printLoggingStatus ctx
 runOn :: Context -> IO ()
 runOn ctx = do
     printLoggingStatus ctx
-    putTextLn "Starting hintman site at https://localhost:8000"
-    run 3000 hintmanApp
+    let siteString = "https://localhost:" <> show (contextPort ctx)
+    putTextLn ("Starting hintman site at " <> siteString)
+    run (contextPort ctx) hintmanApp
