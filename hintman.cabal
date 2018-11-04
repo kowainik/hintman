@@ -25,6 +25,7 @@ library
   exposed-modules:     Prelude
                        Hintman
                            Hintman.Cli
+                           Hintman.Config
                            Hintman.Server
                                Hintman.Server.Auth
                            Hintman.Suggestion.Core
@@ -38,10 +39,10 @@ library
                      , servant ^>= 0.14.1
                      , servant-server ^>= 0.14.1
                      , text ^>= 1.2.3
+                     , tomland ^>= 0.4.0
                      , transformers >= 0.3
                      , wai ^>= 3.2
                      , warp ^>= 3.2
-
 
   ghc-options:         -Wall
                        -Wincomplete-uni-patterns
