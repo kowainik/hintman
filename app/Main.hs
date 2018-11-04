@@ -1,6 +1,6 @@
 module Main (main) where
 
-import Hintman.App (runHintman)
+import Hintman (runHintman)
 
 
 main :: IO ()
