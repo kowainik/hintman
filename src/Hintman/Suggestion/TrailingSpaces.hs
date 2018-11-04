@@ -3,15 +3,15 @@ module Hintman.Suggestion.TrailingSpaces
        ) where
 
 import Data.Text (stripEnd)
-import Hintman.Suggestion.Core (Line (..), Suggest (..))
+import Hintman.Suggestion.Core (ChangeType (..), Line (..), LineChange (..), Suggestion (..))
 
 
-suggest :: FilePath -> [Line] -> [Suggest]
+suggest :: FilePath -> [Line] -> [Suggestion]
 suggest path = mapMaybe mSuggest
   where
-    mSuggest :: Line -> Maybe Suggest
-    mSuggest Line{..} = if lineBody == stripped then Nothing
-        else Just Suggest {suggestFile = path, suggestNew = stripped, suggestComment = Nothing}
+    mSuggest :: Line -> Maybe Suggestion
+    mSuggest l@Line{..} = if lineBody == stripped then Nothing
+        else Just $ Suggestion path l (LineChange stripped Nothing Edit)
       where
         stripped :: Text
         stripped = stripEnd lineBody

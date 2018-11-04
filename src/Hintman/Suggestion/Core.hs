@@ -1,6 +1,8 @@
 module Hintman.Suggestion.Core
-       ( Line (..)
-       , Suggest (..)
+       ( ChangeType (..)
+       , Line (..)
+       , LineChange (..)
+       , Suggestion (..)
        , toLines
        ) where
 
@@ -10,11 +12,19 @@ data Line = Line
     , lineBody :: Text
     } deriving (Eq, Show)
 
-data Suggest = Suggest
-    { suggestFile    :: FilePath
-    , suggestNew     :: Text
-    , suggestComment :: Maybe Text  -- ^ Optional comment to the suggestion
-    } deriving (Eq, Show)
+data ChangeType = Edit | Delete
+
+data Suggestion = Suggestion
+    { suggestionFile   :: FilePath
+    , suggestionLine   :: Line
+    , suggestionChange :: LineChange
+    }
+
+data LineChange = LineChange
+    { lineChangeNew     :: Text
+    , lineChangeComment :: Maybe Text
+    , lineChangeType    :: ChangeType
+    }
 
 toLines :: Text -> [Line]
 toLines txt = map (\(lineRow, lineBody) -> Line{..}) numberedLines

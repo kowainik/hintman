@@ -28,6 +28,7 @@ library
                            Hintman.Server
                                Hintman.Server.Auth
                            Hintman.Suggestion.Core
+                           Hintman.Suggestion.TrailingNewline
                            Hintman.Suggestion.TrailingSpaces
 
   build-depends:       base-noprelude >= 4.11 && < 4.12
