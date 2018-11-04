@@ -2,22 +2,35 @@
 {-# LANGUAGE TypeOperators #-}
 
 module Hintman.Server
-       ( app
+       ( hintmanApp
        ) where
 
-import Servant ((:>), Application, Get, JSON)
+import Servant ((:>), Application, Get, JSON, NoContent (..), Post, serveWithContext)
+import Servant.API.Generic ((:-), ToServantApi, toServant)
+import Servant.Server.Generic (AsServer)
 
-import Servant.API.Generic ((:-))
-import Servant.Server.Generic (AsServer, genericServe)
+import Hintman.Server.Auth (HintmanAuthAPI, hintmanAuthServerContext)
 
-newtype HintmanSite route = HintmanSite {
-    hintmanGetRoute :: route :- "api" :> "the-answer" :> Get '[JSON] Int
+
+data HintmanSite route = HintmanSite
+    { hintmanTheAnswerRoute :: route
+        :- "api"
+        :> "the-answer"
+        :> Get '[JSON] Int
+
+    , hintmanAuthRoute :: route
+        :- HintmanAuthAPI
+        :> Post '[JSON] NoContent
     } deriving (Generic)
+
+type HintmanAPI = ToServantApi HintmanSite
 
 hintmanServer :: HintmanSite AsServer
 hintmanServer = HintmanSite
-    { hintmanGetRoute = return 42
+    { hintmanTheAnswerRoute = pure 42
+    , hintmanAuthRoute = \() -> pure NoContent
     }
 
-app :: Application
-app = genericServe hintmanServer
+hintmanApp :: Application
+hintmanApp = serveWithContext (Proxy @HintmanAPI) hintmanAuthServerContext
+           $ toServant hintmanServer

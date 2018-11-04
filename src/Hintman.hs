@@ -4,8 +4,8 @@ module Hintman
 
 import Network.Wai.Handler.Warp (run)
 
-import Hintman.Cli (Context(..), cliContext)
-import Hintman.Server (app)
+import Hintman.Cli (Context (..), cliContext)
+import Hintman.Server (hintmanApp)
 
 
 runHintman :: IO ()
@@ -23,4 +23,4 @@ runOn :: Context -> IO ()
 runOn ctx = do
     printLoggingStatus ctx
     putTextLn "Starting hintman site at https://localhost:8000"
-    run 8000 app
+    run 3000 hintmanApp
