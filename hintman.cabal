@@ -107,11 +107,14 @@ executable hintman
 test-suite hintman-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
+  other-modules:       Test.Suggestion
   main-is:             Spec.hs
 
   build-depends:       base-noprelude
+                     , hedgehog ^>= 0.6
                      , hintman
                      , relude
+                     , text ^>= 1.2.3
 
   ghc-options:         -Wall
                        -threaded
