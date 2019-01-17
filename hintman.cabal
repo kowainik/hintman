@@ -115,6 +115,7 @@ test-suite hintman-test
   build-depends:       base-noprelude
                      , hedgehog ^>= 0.6
                      , hintman
+                     , hspec ^>= 2.5.5
                      , relude
                      , text ^>= 1.2.3
 
