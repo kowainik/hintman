@@ -5,7 +5,8 @@ module Hintman
 import Network.Wai.Handler.Warp (run)
 
 import Hintman.Cli (Context (..), cliContext)
-import Hintman.Server (hintmanApp)
+import Hintman.Config (loadFileConfig)
+import Hintman.Server (HintmanEnv (..), hintmanApp)
 
 
 runHintman :: IO ()
@@ -24,4 +25,5 @@ runOn ctx = do
     printLoggingStatus ctx
     let siteString = "https://localhost:" <> show (contextPort ctx)
     putTextLn ("Starting hintman site at " <> siteString)
-    run (contextPort ctx) hintmanApp
+    config <- loadFileConfig "hintman-config.toml"
+    run (contextPort ctx) (hintmanApp $ HintmanEnv config)

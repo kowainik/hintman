@@ -4,60 +4,49 @@ language: haskell
 git:
   depth: 5
 
+cabal: "head"
+
 cache:
   directories:
-  - "$HOME/.cabal"
+  - "$HOME/.cabal/store"
   - "$HOME/.stack"
   - "$TRAVIS_BUILD_DIR/.stack-work"
 
 matrix:
   include:
-  
-  - ghc: 8.4.3
-    env: GHCVER='8.4.3' CABALVER='head'
-    os: linux
-    addons:
-      apt:
-        sources:
-        - hvr-ghc
-        packages:
-        - ghc-8.4.3
-        - cabal-install-head
-  
-  - ghc: 8.4.3
-    env: GHCVER='8.4.3' STACK_YAML="$TRAVIS_BUILD_DIR/stack.yaml"
-    os: linux
-    addons:
-      apt:
-        packages:
-        - libgmp-dev
+
+  # cabal
+  - ghc: 8.6.3
+
+  # stack
+  - ghc: 8.6.3
+    env: STACK_YAML="$TRAVIS_BUILD_DIR/stack.yaml"
 
 install:
   - |
     if [ -z "$STACK_YAML" ]; then
-      export PATH="/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH"
-      echo $PATH
+      ghc --version
+      cabal --version
       cabal new-update
       cabal new-build --enable-tests --enable-benchmarks
     else
-      mkdir -p ~/.local/bin
-      export PATH="$HOME/.local/bin:$PATH"
-      travis_retry curl -L 'https://www.stackage.org/stack/linux-x86_64' | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+      # install stack
+      curl -sSL https://get.haskellstack.org/ | sh
+
+      # build project with stack
       stack --version
-      stack setup --no-terminal --install-cabal 2.2.0.1
-      stack ghc -- --version
-      stack build --only-dependencies --no-terminal
+      stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks
     fi
 
 script:
   - |
     if [ -z "$STACK_YAML" ]; then
-       cabal new-test
+       cabal new-test --enable-tests
     else
-      stack build --test --bench --no-run-benchmarks --no-terminal --ghc-options=-Werror
+      stack test --system-ghc --no-terminal
     fi
-  - curl https://raw.githubusercontent.com/kowainik/relude/bc23b0fe2c3699f5c202ed04222766dc0d789fd1/.hlint.yaml -o .hlint-relude.yaml
-  - curl -sSL https://raw.github.com/ndmitchell/neil/master/misc/travis.sh | sh -s -- hlint -h .hlint-relude.yaml src/ test/  
+  - curl https://raw.githubusercontent.com/kowainik/relude/988bbdd3a09df1159917012933780523644880e5/.hlint.yaml -o .hlint-relude.yaml
+  - curl -sSL https://raw.github.com/ndmitchell/neil/master/misc/travis.sh | sh -s -- hlint -h .hlint-relude.yaml src/ test/
 
 notifications:
   email: false

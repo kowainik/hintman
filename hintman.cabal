@@ -9,12 +9,12 @@ license:             MPL-2.0
 license-file:        LICENSE
 author:              Kowainik
 maintainer:          xrom.xkov@gmail.com
-copyright:           2018 Kowainik
+copyright:           2018-2019 Kowainik
 category:            GitHub, Webhook
 build-type:          Simple
 extra-doc-files:     README.md
                    , CHANGELOG.md
-tested-with:         GHC == 8.4.3
+tested-with:         GHC == 8.6.3
 
 source-repository head
   type:                git
@@ -33,17 +33,17 @@ library
                            Hintman.Suggestion.TrailingNewline
                            Hintman.Suggestion.TrailingSpaces
 
-  build-depends:       base-noprelude >= 4.11 && < 4.12
+  build-depends:       base-noprelude ^>= 4.12
                      , containers
                      , optparse-applicative ^>= 0.14.3
                      , jwt ^>= 0.7.2
-                     , relude ^>= 0.3.0
+                     , relude ^>= 0.4.0
                      , bytestring ^>= 0.10.8.2
                      , cryptonite ^>= 0.25
-                     , servant ^>= 0.14.1
-                     , servant-server ^>= 0.14.1
+                     , servant ^>= 0.15
+                     , servant-server ^>= 0.15
                      , text ^>= 1.2.3
-                     , tomland ^>= 0.4.0
+                     , tomland ^>= 1.0.0
                      , time >= 1.8 && < 1.10
                      , transformers ^>= 0.5.5.0
                      , wai ^>= 3.2
@@ -78,7 +78,7 @@ executable hintman
 
   build-depends:       base-noprelude
                      , hintman
-                     , relude ^>= 0.3.0
+                     , relude
 
   ghc-options:         -Wall
                        -threaded
@@ -115,7 +115,7 @@ test-suite hintman-test
   build-depends:       base-noprelude
                      , hedgehog ^>= 0.6
                      , hintman
-                     , hspec ^>= 2.5.5
+                     , hspec ^>= 2.6.1
                      , relude
                      , text ^>= 1.2.3
 

@@ -5,6 +5,7 @@
 
 module Hintman.Server.Auth
        ( HintmanAuthAPI
+       , HintmanAuthContextHandlers
        , hintmanAuthServerContext
        ) where
 
@@ -21,6 +22,7 @@ import Servant.Server.Experimental.Auth (AuthHandler, AuthServerData, mkAuthHand
 import System.Environment (getEnv)
 
 import Hintman.GitHub.Auth (GithubWebhookSecret (..))
+
 
 type HintmanAuthAPI = AuthProtect "GitHub"
 type instance AuthServerData (AuthProtect "GitHub") = ()
@@ -58,4 +60,6 @@ hintmanAuthHandler :: AuthHandler Request ()
 hintmanAuthHandler = mkAuthHandler handler
   where
     handler :: Request -> Handler ()
-    handler = verifySignature >> print
+    handler req = do
+        verifySignature req
+        print req

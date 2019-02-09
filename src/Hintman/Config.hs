@@ -1,11 +1,13 @@
+-- | Configuration for @hintman@ with TOML codec.
+
 module Hintman.Config
-       ( HintmanConfig(..)
+       ( HintmanConfig (..)
        , loadFileConfig
        ) where
 
 import Control.Exception (catch)
 import Relude.Extra.Enum (inverseMap)
-import Toml              (AnyValue (..), BiMap (..), BiToml, (.=), LoadTomlException)
+import Toml (AnyValue (..), LoadTomlException, TomlBiMap, TomlCodec, (.=))
 
 import qualified Toml
 
@@ -30,20 +32,20 @@ showSuggestionType  = \case
 parseSuggestionType :: Text -> Maybe SuggestionType
 parseSuggestionType = inverseMap showSuggestionType
 
-hintmanConfiguationT :: BiToml HintmanConfig
-hintmanConfiguationT = HintmanConfig
+hintmanConfiguationCodec :: TomlCodec HintmanConfig
+hintmanConfiguationCodec = HintmanConfig
     <$> Toml.arrayOf _SuggestionType "checks" .= hintmanConfigSuggestionTypes
   where
-    _SuggestionType :: BiMap AnyValue SuggestionType
-    _SuggestionType = BiMap
-         { forward = \(AnyValue t) -> Toml.matchText t >>= parseSuggestionType
-         , backward = Just . AnyValue . Toml.Text . showSuggestionType
-         }
+    _SuggestionType :: TomlBiMap SuggestionType AnyValue
+    _SuggestionType = Toml._TextBy
+        showSuggestionType
+        (maybeToRight "Couldn't parsse 'SuggestionType'" . parseSuggestionType)
 
 loadFileConfig :: FilePath -> IO HintmanConfig
-loadFileConfig path = Toml.decodeFile hintmanConfiguationT path `catch` catchLoad
-    where
-        catchLoad :: LoadTomlException -> IO HintmanConfig
-        catchLoad _ = do
-              print $ "Hintman failed to load config from " <> path
-              pure defaultHintmanConfig
+loadFileConfig path =
+    Toml.decodeFile hintmanConfiguationCodec path `catch` catchLoad
+  where
+    catchLoad :: LoadTomlException -> IO HintmanConfig
+    catchLoad _ = do
+        print $ "Hintman failed to load config from " <> path
+        pure defaultHintmanConfig
