@@ -24,14 +24,17 @@ library
   hs-source-dirs:      src
   exposed-modules:     Prelude
                        Hintman
-                           Hintman.Cli
-                           Hintman.Config
-                           Hintman.GitHub.Auth
-                           Hintman.Server
-                               Hintman.Server.Auth
-                           Hintman.Suggestion.Core
-                           Hintman.Suggestion.TrailingNewline
-                           Hintman.Suggestion.TrailingSpaces
+                         Hintman.App
+                           Hintman.App.Env
+                           Hintman.App.Monad
+                         Hintman.Cli
+                         Hintman.Config
+                         Hintman.GitHub.Auth
+                         Hintman.Server
+                             Hintman.Server.Auth
+                         Hintman.Suggestion.Core
+                         Hintman.Suggestion.TrailingNewline
+                         Hintman.Suggestion.TrailingSpaces
 
   build-depends:       base-noprelude ^>= 4.12
                      , containers

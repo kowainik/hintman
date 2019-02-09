@@ -2,27 +2,16 @@
 {-# LANGUAGE TypeOperators #-}
 
 module Hintman.Server
-       ( HintmanEnv (..)
-       , hintmanApp
+       ( hintmanApp
        ) where
 
-import Servant ((:>), Application, Get, Handler, JSON, NoContent (..), Post, Server,
-                hoistServerWithContext, serveWithContext)
+import Servant ((:>), Application, Get, JSON, NoContent (..), Post, Server, hoistServerWithContext,
+                serveWithContext)
 import Servant.API.Generic ((:-), ToServantApi, toServant)
 import Servant.Server.Generic (AsServerT)
 
-import Hintman.Config (HintmanConfig)
+import Hintman.App (App, Env, runAppAsHandler)
 import Hintman.Server.Auth (HintmanAuthAPI, HintmanAuthContextHandlers, hintmanAuthServerContext)
-
-
-newtype HintmanEnv = HintmanEnv
-    { hintmanEnvConfig :: HintmanConfig
-    }
-
-type HintmanAppM = ReaderT HintmanEnv Handler
-
-runAppAsHandler :: HintmanEnv -> HintmanAppM a -> Handler a
-runAppAsHandler = usingReaderT
 
 
 data HintmanSite route = HintmanSite
@@ -38,20 +27,20 @@ data HintmanSite route = HintmanSite
 
 type HintmanAPI = ToServantApi HintmanSite
 
-hintmanServer :: HintmanSite (AsServerT HintmanAppM)
+hintmanServer :: HintmanSite (AsServerT App)
 hintmanServer = HintmanSite
     { hintmanTheAnswerRoute = pure 42
     , hintmanAuthRoute = \() -> pure NoContent
     }
 
-server :: HintmanEnv -> Server HintmanAPI
+server :: Env -> Server HintmanAPI
 server env = hoistServerWithContext
     (Proxy @HintmanAPI)
     (Proxy @HintmanAuthContextHandlers)
     (runAppAsHandler env)
     (toServant hintmanServer)
 
-hintmanApp :: HintmanEnv -> Application
+hintmanApp :: Env -> Application
 hintmanApp env = serveWithContext
     (Proxy @HintmanAPI)
     hintmanAuthServerContext
