@@ -1,7 +1,8 @@
 -- | Configuration for @hintman@ with TOML codec.
 
 module Hintman.Config
-       ( HintmanConfig (..)
+       ( HintmanConfig(..)
+       , SuggestionType(..)
        , loadFileConfig
        ) where
 

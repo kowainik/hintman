@@ -33,6 +33,7 @@ library
                          Hintman.Server
                              Hintman.Server.Auth
                          Hintman.Suggestion.Core
+                         Hintman.Suggestion.Aggregation
                          Hintman.Suggestion.TrailingNewline
                          Hintman.Suggestion.TrailingSpaces
 

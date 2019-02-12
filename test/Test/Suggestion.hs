@@ -3,14 +3,16 @@
 module Test.Suggestion (spec, tests) where
 
 import qualified Data.Text as T
-import Hedgehog (Gen, Group (..), MonadGen, Property, PropertyName, (===), checkParallel, forAll, property)
+import Hedgehog (Gen, Group (..), MonadGen, Property, PropertyName, checkParallel, forAll, property,
+                 (===))
 import qualified Hedgehog.Gen as Gen
 import qualified Hedgehog.Range as Range
 import Test.Hspec (Spec, context, describe, it, shouldBe)
 
-import Hintman.Suggestion.Core (ChangeType (..), LineChange (..), Line (..), Suggestion (..), toLines)
-import qualified Hintman.Suggestion.TrailingSpaces as S
+import Hintman.Config (SuggestionType (..))
+import Hintman.Suggestion.Core (Line (..), LineChange (..), Suggestion (..), toLines)
 import qualified Hintman.Suggestion.TrailingNewline as N
+import qualified Hintman.Suggestion.TrailingSpaces as S
 
 newtype LineNumber = MkLineNumber Int
   deriving (Eq, Show)
@@ -78,7 +80,8 @@ spec =
     context "When file has trailing newlines" $
       it "suggests removal" $ do
         let given = toLines "foo bar\n\nbaz\n\n"
-            expected = [ Suggestion "foo" (Line 4 T.empty) (LineChange T.empty Nothing Delete) ]
+            expected =
+                [ Suggestion "foo" (Line 4 T.empty) (LineChange T.empty Nothing TrailingNewlines) ]
         N.suggest "foo" given `shouldBe` expected
     context "When file has no trailing newlines" $
       it "suggests nothing" $ do

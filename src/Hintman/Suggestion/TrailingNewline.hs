@@ -2,7 +2,8 @@ module Hintman.Suggestion.TrailingNewline
        ( suggest
        ) where
 
-import Hintman.Suggestion.Core (ChangeType (..), Line (..), LineChange (..), Suggestion (..))
+import Hintman.Suggestion.Core (Line (..), LineChange (..), Suggestion (..))
+import Hintman.Config (SuggestionType(..))
 
 import qualified Data.Text as T
 
@@ -11,7 +12,8 @@ suggest :: FilePath -> [Line] -> [Suggestion]
 suggest path = generateResult . trailingNewLines . reverse
   where
     generateResult :: [Line] -> [Suggestion]
-    generateResult = map (\l -> Suggestion path l (LineChange T.empty Nothing Delete))
+    generateResult = map
+        (\l -> Suggestion path l (LineChange T.empty Nothing TrailingNewlines))
 
     trailingNewLines :: [Line] -> [Line]
     trailingNewLines = takeWhile isNewline

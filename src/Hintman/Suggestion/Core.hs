@@ -1,19 +1,17 @@
 module Hintman.Suggestion.Core
-       ( ChangeType (..)
-       , Line (..)
+       ( Line (..)
        , LineChange (..)
        , Suggestion (..)
        , toLines
        ) where
+
+import Hintman.Config (SuggestionType(..))
 
 
 data Line = Line
     { lineRow  :: Int
     , lineBody :: Text
     } deriving (Eq, Show)
-
-data ChangeType = Edit | Delete
-  deriving (Eq, Show)
 
 data Suggestion = Suggestion
     { suggestionFile   :: FilePath
@@ -24,7 +22,7 @@ data Suggestion = Suggestion
 data LineChange = LineChange
     { lineChangeNew     :: Text
     , lineChangeComment :: Maybe Text
-    , lineChangeType    :: ChangeType
+    , lineChangeType    :: SuggestionType
     } deriving (Eq, Show)
 
 toLines :: Text -> [Line]
