@@ -5,16 +5,17 @@ module Hintman.App.Monad
        , runAppAsHandler
        ) where
 
-import Servant (Handler)
+import Servant (Handler(..))
+import Control.Exception (try)
 
 import Hintman.App.Env (Env)
 
 
 -- | Main application monad.
 newtype App a = App
-    { unApp :: ReaderT Env Handler a
+    { unApp :: ReaderT Env IO a
     } deriving (Functor, Applicative, Monad, MonadReader Env)
 
 -- | Running 'App' as 'Handler'.
 runAppAsHandler :: Env -> App a -> Handler a
-runAppAsHandler env = usingReaderT env . unApp
+runAppAsHandler env = Handler . ExceptT . try . usingReaderT env . unApp
