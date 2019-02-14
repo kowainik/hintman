@@ -3,11 +3,13 @@ module Main (main) where
 import System.IO (hSetEncoding, utf8)
 import Test.Hspec (hspec)
 
-import Test.Suggestion (spec, tests)
+import qualified Test.Config as Config
+import qualified Test.Suggestion as Suggestion
 
 main :: IO ()
 main = do
+  hspec Config.spec
+  hspec Suggestion.spec
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8
-  hspec spec
-  ifM tests exitSuccess exitFailure
+  ifM Suggestion.tests exitSuccess exitFailure

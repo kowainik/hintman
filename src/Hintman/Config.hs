@@ -6,7 +6,7 @@ module Hintman.Config
        , loadFileConfig
        ) where
 
-import Control.Exception (catch)
+import Control.Exception (IOException, catch)
 import Relude.Extra.Enum (inverseMap)
 import Toml (AnyValue (..), LoadTomlException, TomlBiMap, TomlCodec, (.=))
 
@@ -20,7 +20,7 @@ data SuggestionType
 
 newtype HintmanConfig = HintmanConfig
     { hintmanConfigSuggestionTypes :: [SuggestionType]
-    } deriving (Show)
+    } deriving (Eq, Show)
 
 defaultHintmanConfig :: HintmanConfig
 defaultHintmanConfig = HintmanConfig [TrailingSpaces, TrailingNewlines]
@@ -44,9 +44,11 @@ hintmanConfiguationCodec = HintmanConfig
 
 loadFileConfig :: FilePath -> IO HintmanConfig
 loadFileConfig path =
-    Toml.decodeFile hintmanConfiguationCodec path `catch` catchLoad
+    Toml.decodeFile hintmanConfiguationCodec path
+        `catch` catchExcAndReturnDefaultConfig
   where
-    catchLoad :: LoadTomlException -> IO HintmanConfig
-    catchLoad _ = do
-        print $ "Hintman failed to load config from " <> path
-        pure defaultHintmanConfig
+    catchExcAndReturnDefaultConfig :: SomeException -> IO HintmanConfig
+    catchExcAndReturnDefaultConfig e = defaultHintmanConfig <$ case e of
+        Exc (_ :: LoadTomlException) -> putTextLn ("Encountered LoadTomlException while trying to load config from " <> toText path)
+        Exc (_ :: IOException) -> putTextLn ("Config '" <> toText path <> "' does not exist! Using default configuration")
+        _ -> putTextLn ("Error while trying to load config from " <> toText path <> ": " <> show e)

@@ -112,7 +112,8 @@ executable hintman
 test-suite hintman-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
-  other-modules:       Test.Suggestion
+  other-modules:       Test.Config
+                       Test.Suggestion
   main-is:             Spec.hs
 
   build-depends:       base-noprelude
@@ -120,7 +121,9 @@ test-suite hintman-test
                      , hintman
                      , hspec ^>= 2.6.1
                      , relude
+                     , silently
                      , text ^>= 1.2.3
+                     , temporary
 
   ghc-options:         -Wall
                        -threaded
