@@ -2,8 +2,8 @@ module Hintman.Suggestion.TrailingNewline
        ( suggest
        ) where
 
+import Hintman.Config (SuggestionType (..))
 import Hintman.Suggestion.Core (Line (..), LineChange (..), Suggestion (..))
-import Hintman.Config (SuggestionType(..))
 
 import qualified Data.Text as T
 

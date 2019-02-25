@@ -3,8 +3,8 @@ module Hintman.Suggestion.TrailingSpaces
        ) where
 
 import Data.Text (stripEnd)
+import Hintman.Config (SuggestionType (..))
 import Hintman.Suggestion.Core (Line (..), LineChange (..), Suggestion (..))
-import Hintman.Config (SuggestionType(..))
 
 
 suggest :: FilePath -> [Line] -> [Suggestion]

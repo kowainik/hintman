@@ -5,8 +5,8 @@ module Hintman.App.Monad
        , runAppAsHandler
        ) where
 
-import Servant (Handler(..))
 import Control.Exception (try)
+import Servant (Handler (..))
 
 import Hintman.App.Env (Env)
 

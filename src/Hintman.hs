@@ -5,26 +5,26 @@ module Hintman
 import Network.Wai.Handler.Warp (run)
 
 import Hintman.App (Env (..))
-import Hintman.Cli (Context (..), cliContext)
+import Hintman.Cli (CliArguments (..), cliArguments)
 import Hintman.Config (loadFileConfig)
 import Hintman.Server (hintmanApp)
 
 
 runHintman :: IO ()
-runHintman = cliContext >>= runOn
+runHintman = cliArguments >>= runOn
 
 
 -- | Prints the logging status in this context
-printLoggingStatus :: Context -> IO ()
+printLoggingStatus :: CliArguments -> IO ()
 printLoggingStatus ctx
-    | contextLogging ctx = putTextLn "Logging is enabled"
-    | otherwise          = putTextLn "Logging is disabled"
+    | cliArgumentsLogging ctx = putTextLn "Logging is enabled"
+    | otherwise               = putTextLn "Logging is disabled"
 
 -- | Runs the program with a given context
-runOn :: Context -> IO ()
+runOn :: CliArguments -> IO ()
 runOn ctx = do
     printLoggingStatus ctx
-    let siteString = "https://localhost:" <> show (contextPort ctx)
+    let siteString = "https://localhost:" <> show (cliArgumentsPort ctx)
     putTextLn ("Starting hintman site at " <> siteString)
     config <- loadFileConfig "hintman-config.toml"
-    run (contextPort ctx) (hintmanApp $ Env config)
+    run (cliArgumentsPort ctx) (hintmanApp $ Env config)

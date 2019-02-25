@@ -5,7 +5,7 @@ module Hintman.Suggestion.Core
        , toLines
        ) where
 
-import Hintman.Config (SuggestionType(..))
+import Hintman.Config (SuggestionType (..))
 
 
 data Line = Line

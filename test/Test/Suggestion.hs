@@ -47,7 +47,7 @@ linesToText :: [TestLine] -> Text
 linesToText = unlines . map unLine
   where
     unLine :: TestLine -> Text
-    unLine (Plain s) = s
+    unLine (Plain s)    = s
     unLine (Trailing s) = s
 
 trailingLines :: [TestLine] -> [LineNumber]
@@ -58,7 +58,7 @@ trailingLines xs = map (MkLineNumber . fst) (filter isTrailing numberedLines)
 
     isTrailing :: (Int, TestLine) -> Bool
     isTrailing (_, Trailing _) = True
-    isTrailing _ = False
+    isTrailing _               = False
 
 testSuggestTrailing :: Property
 testSuggestTrailing = property $ do
