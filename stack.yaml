@@ -1,8 +1,7 @@
-resolver: lts-13.6
+resolver: lts-13.29
 
 extra-deps:
   - jwt-0.7.2
-  - tomland-1.0.0
-
-ghc-options:
-  "$locals": -fhide-source-paths
+  - relude-0.5.0
+  - tomland-1.1.0.1
+  - parser-combinators-1.1.0 # for tomland
