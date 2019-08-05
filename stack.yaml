@@ -2,6 +2,11 @@ resolver: lts-13.29
 
 extra-deps:
   - jwt-0.7.2
+  - github-0.22
+  - binary-instances-1    # for github
+  - binary-orphans-1.0.1  # for github
+  - time-compat-1.9.2.2   # for github
   - relude-0.5.0
+  - servant-github-webhook-0.4.1.0
   - tomland-1.1.0.1
   - parser-combinators-1.1.0 # for tomland

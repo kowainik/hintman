@@ -37,6 +37,7 @@ common common-options
   default-language:    Haskell2010
   default-extensions:  ConstraintKinds
                        DeriveGeneric
+                       DerivingStrategies
                        InstanceSigs
                        GeneralizedNewtypeDeriving
                        LambdaCase
@@ -59,22 +60,24 @@ library
                          Hintman.Cli
                          Hintman.Config
                          Hintman.GitHub.Auth
-                         Hintman.Server
-                             Hintman.Server.Auth
                          Hintman.Suggestion.Core
                          Hintman.Suggestion.Aggregation
                          Hintman.Suggestion.TrailingNewline
                          Hintman.Suggestion.TrailingSpaces
+                         Hintman.Webhook
 
-  build-depends:       containers
-                     , optparse-applicative ^>= 0.14.3
-                     , jwt ^>= 0.7.2
+  build-depends:       aeson
                      , bytestring ^>= 0.10.8.2
+                     , containers
+                     , jwt ^>= 0.7.2
+                     , github-webhooks ^>= 0.10.1
+                     , optparse-applicative ^>= 0.14.3
                      , servant ^>= 0.15
+                     , servant-github-webhook ^>= 0.4.1.0
                      , servant-server ^>= 0.15
                      , text ^>= 1.2.3
-                     , tomland ^>= 1.1.0.1
                      , time >= 1.8 && < 1.10
+                     , tomland ^>= 1.1.0.1
                      , transformers ^>= 0.5.5.0
                      , wai ^>= 3.2
                      , warp ^>= 3.2

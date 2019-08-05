@@ -14,7 +14,7 @@ import Hintman.App.Env (Env)
 -- | Main application monad.
 newtype App a = App
     { unApp :: ReaderT Env IO a
-    } deriving (Functor, Applicative, Monad, MonadReader Env)
+    } deriving (Functor, Applicative, Monad, MonadReader Env, MonadIO)
 
 -- | Running 'App' as 'Handler'.
 runAppAsHandler :: Env -> App a -> Handler a
