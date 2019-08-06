@@ -6,7 +6,13 @@ extra-deps:
   - binary-instances-1    # for github
   - binary-orphans-1.0.1  # for github
   - time-compat-1.9.2.2   # for github
+  - optparse-applicative-0.15.0.0
   - relude-0.5.0
+  - servant-0.16.1
+  - servant-client-0.16
+  - servant-client-core-0.16
   - servant-github-webhook-0.4.1.0
+  - servant-server-0.16.1
+  - http-api-data-0.4.1  # for servant
   - tomland-1.1.0.1
   - parser-combinators-1.1.0 # for tomland

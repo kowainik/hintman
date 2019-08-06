@@ -74,11 +74,11 @@ library
                      , diff-parse ^>= 0.2.1
                      , github-webhooks ^>= 0.10.1
                      , http-client-tls ^>= 0.3.5
-                     , optparse-applicative ^>= 0.14.3
-                     , servant ^>= 0.15
-                     , servant-client ^>= 0.15
+                     , optparse-applicative ^>= 0.15.0.0
+                     , servant ^>= 0.16
+                     , servant-client ^>= 0.16
                      , servant-github-webhook ^>= 0.4.1.0
-                     , servant-server ^>= 0.15
+                     , servant-server ^>= 0.16
                      , text ^>= 1.2.3
                      , time >= 1.8 && < 1.10
                      , tomland ^>= 1.1.0.1
