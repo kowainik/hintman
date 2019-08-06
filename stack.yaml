@@ -1,7 +1,7 @@
 resolver: lts-13.29
 
 extra-deps:
-  - jwt-0.7.2
+  - diff-parse-0.2.1
   - github-0.22
   - binary-instances-1    # for github
   - binary-orphans-1.0.1  # for github

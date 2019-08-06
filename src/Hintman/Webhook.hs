@@ -6,8 +6,8 @@ module Hintman.Webhook
        ) where
 
 import GitHub.Data.Webhooks.Events (PullRequestEvent (..))
-import Servant ((:>), Application, Context ((:.), EmptyContext), JSON, Post, Server,
-                hoistServerWithContext, serveWithContext)
+import Servant (Application, Context ((:.), EmptyContext), Server, hoistServerWithContext,
+                serveWithContext)
 import Servant.API.Generic ((:-), ToServantApi, toServant)
 import Servant.GitHub.Webhook (GitHubEvent, GitHubKey, GitHubSignedReqBody, RepoWebhookEvent (..))
 import Servant.Server.Generic (AsServerT)
