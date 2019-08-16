@@ -1,6 +1,6 @@
 -- | Core types related to pull request.
 
-module Hintman.Core.PR
+module Hintman.Core.PrInfo
        ( Repo (..)
        , Owner (..)
        , PrNumber (..)

@@ -57,9 +57,13 @@ library
                          Hintman.App
                            Hintman.App.Env
                            Hintman.App.Monad
+
+                         Hintman.Core.PrInfo
+                         Hintman.Core.Review
+
                          Hintman.Cli
+                         Hintman.Comment
                          Hintman.Config
-                         Hintman.Core.PR
                          Hintman.Diff
                          Hintman.Webhook
 
@@ -72,6 +76,7 @@ library
                      , bytestring ^>= 0.10.8.2
                      , containers
                      , diff-parse ^>= 0.2.1
+                     , github ^>= 0.22
                      , github-webhooks ^>= 0.10.1
                      , http-client-tls ^>= 0.3.5
                      , optparse-applicative ^>= 0.15.0.0

@@ -2,10 +2,12 @@
 
 module Prelude
        ( module Relude
+       , module Json
        , module Web
        ) where
 
 import Relude
 import Relude.Extra.Newtype as Relude (un)
 
+import Data.Aeson as Json (FromJSON (parseJSON), ToJSON (toJSON))
 import Servant.API as Web ((:>), Capture, Get, JSON, NoContent (NoContent), Post, ReqBody)

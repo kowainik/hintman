@@ -15,7 +15,7 @@ import Servant.Client (BaseUrl (..), ClientM, Scheme (Https), client, mkClientEn
 import Text.Diff.Parse (parseDiff)
 import Text.Diff.Parse.Types (FileDeltas)
 
-import Hintman.Core.PR (Owner, PrNumber, Repo)
+import Hintman.Core.PrInfo (Owner, PrNumber, Repo)
 
 
 {- | Endpoint that represents the following @curl@ command:
