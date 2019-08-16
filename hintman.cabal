@@ -65,6 +65,7 @@ library
                          Hintman.Comment
                          Hintman.Config
                          Hintman.Diff
+                         Hintman.HLint
                          Hintman.Webhook
 
                          Hintman.Suggestion.Core
@@ -76,9 +77,13 @@ library
                      , bytestring ^>= 0.10.8.2
                      , containers
                      , diff-parse ^>= 0.2.1
+                     , filepath ^>= 1.4
                      , github ^>= 0.22
                      , github-webhooks ^>= 0.10.1
+                     , hlint ^>= 2.2.2
+                     , http-client ^>= 0.6.4
                      , http-client-tls ^>= 0.3.5
+                     , http-types
                      , optparse-applicative ^>= 0.15.0.0
                      , servant ^>= 0.16
                      , servant-client ^>= 0.16
@@ -105,6 +110,8 @@ test-suite hintman-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   other-modules:       Test.Config
+                       Test.Data
+                       Test.HLint
                        Test.Suggestion
   main-is:             Spec.hs
 

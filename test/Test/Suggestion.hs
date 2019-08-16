@@ -1,26 +1,51 @@
-{-# LANGUAGE OverloadedStrings #-}
+module Test.Suggestion
+       ( suggestionSpec
+       , suggestionTests
+       ) where
 
-module Test.Suggestion (spec, tests) where
-
-import qualified Data.Text as T
 import Hedgehog (Gen, Group (..), MonadGen, Property, PropertyName, checkParallel, forAll, property,
                  (===))
-import qualified Hedgehog.Gen as Gen
-import qualified Hedgehog.Range as Range
 import Test.Hspec (Spec, context, describe, it, shouldBe)
 
 import Hintman.Config (SuggestionType (..))
 import Hintman.Suggestion.Core (Line (..), LineChange (..), Suggestion (..), toLines)
+
+import qualified Data.Text as T
+import qualified Hedgehog.Gen as Gen
+import qualified Hedgehog.Range as Range
+
 import qualified Hintman.Suggestion.TrailingNewline as N
 import qualified Hintman.Suggestion.TrailingSpaces as S
 
+
+suggestionSpec :: Spec
+suggestionSpec = describe "Trailing newlines removal" $ do
+    context "When file has trailing newlines" $
+      it "suggests removal" $ do
+        let given = toLines "foo bar\n\nbaz\n\n"
+            expected =
+                [ Suggestion "foo" (Line 4 T.empty) (LineChange T.empty Nothing TrailingNewlines) ]
+        N.suggest "foo" given `shouldBe` expected
+    context "When file has no trailing newlines" $
+      it "suggests nothing" $ do
+        let given = toLines "foo bar\nbaz\n"
+            expected = []
+        N.suggest "foo" given `shouldBe` expected
+
+suggestionTests :: IO Bool
+suggestionTests = checkParallel (Group "Test.Suggest" props)
+  where
+    props :: [(PropertyName, Property)]
+    props = [ ("suggest edits when trailing spaces", testSuggestTrailing) ]
+
+
 newtype LineNumber = MkLineNumber Int
-  deriving (Eq, Show)
+    deriving (Eq, Show)
 
 data TestLine
-  = Plain Text
-  | Trailing Text
-  deriving (Show)
+    = Plain Text
+    | Trailing Text
+    deriving (Show)
 
 space :: MonadGen m => m Char
 space = pure ' '
@@ -39,9 +64,9 @@ genTrailing = Trailing <$> Gen.subterm2 genText genSpaces T.append
 
 genLines :: Gen [TestLine]
 genLines = Gen.list (Range.linear 0 120) $ Gen.choice
-  [ genPlain
-  , genTrailing
-  ]
+    [ genPlain
+    , genTrailing
+    ]
 
 linesToText :: [TestLine] -> Text
 linesToText = unlines . map unLine
@@ -62,29 +87,7 @@ trailingLines xs = map (MkLineNumber . fst) (filter isTrailing numberedLines)
 
 testSuggestTrailing :: Property
 testSuggestTrailing = property $ do
-  xs <- forAll genLines
-  let ys = map (lineRow . suggestionLine) (S.suggest "foo" (toLines . linesToText $ xs))
-      ns = map coerce (trailingLines xs)
-  ys === ns
-
-tests :: IO Bool
-tests = checkParallel (Group "Test.Suggest" props)
-  where
-    props :: [(PropertyName, Property)]
-    props =
-      [ ("suggest edits when trailing spaces", testSuggestTrailing) ]
-
-spec :: Spec
-spec =
-  describe "Trailing newlines removal" $ do
-    context "When file has trailing newlines" $
-      it "suggests removal" $ do
-        let given = toLines "foo bar\n\nbaz\n\n"
-            expected =
-                [ Suggestion "foo" (Line 4 T.empty) (LineChange T.empty Nothing TrailingNewlines) ]
-        N.suggest "foo" given `shouldBe` expected
-    context "When file has no trailing newlines" $
-      it "suggests nothing" $ do
-        let given = toLines "foo bar\nbaz\n"
-            expected = []
-        N.suggest "foo" given `shouldBe` expected
+    xs <- forAll genLines
+    let ys = map (lineRow . suggestionLine) (S.suggest "foo" (toLines . linesToText $ xs))
+        ns = map coerce (trailingLines xs)
+    ys === ns

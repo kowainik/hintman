@@ -2,6 +2,10 @@ resolver: lts-13.29
 
 extra-deps:
   - diff-parse-0.2.1
+  - hlint-2.2.2
+  - ghc-lib-parser-8.8.0.20190723  # for hlint
+  - haskell-src-exts-1.21.0 # for hlint
+  - http-client-0.6.4
   - github-0.22
   - binary-instances-1    # for github
   - binary-orphans-1.0.1  # for github
