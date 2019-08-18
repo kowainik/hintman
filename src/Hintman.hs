@@ -2,13 +2,16 @@ module Hintman
        ( runHintman
        ) where
 
+import Data.X509 (PrivKey (PrivKeyRSA))
+import Data.X509.File (readKeyFile)
 import Network.Wai.Handler.Warp (run)
-import Servant.GitHub.Webhook (gitHubKey)
 import System.Environment (lookupEnv)
 
 import Hintman.App (Env (..))
 import Hintman.Cli (CliArguments (..), cliArguments)
 import Hintman.Config (loadFileConfig)
+import Hintman.Core.Key (gitHubKey)
+import Hintman.Core.Token (AppInfo (..))
 import Hintman.Webhook (hintmanApp)
 
 import qualified Data.ByteString.Char8 as C8
@@ -30,7 +33,19 @@ runOn ctx = do
     printLoggingStatus ctx
     let siteString = "https://localhost:" <> show (cliArgumentsPort ctx)
     putTextLn ("Starting hintman site at " <> siteString)
+
     envConfig <- loadFileConfig "hintman-config.toml"
-    key <- maybe mempty C8.pack <$> lookupEnv "KEY"
+
+    key <- maybe (error "KEY not found") C8.pack <$> lookupEnv "KEY"
     let envGitHubKey = gitHubKey $ pure key
+
+    pkPath <- fromMaybe (error "PK_PATH not found") <$> lookupEnv "PK_PATH"
+    [PrivKeyRSA pk] <- readKeyFile pkPath
+    let envAppInfo = AppInfo
+            { appInfoId = 20170
+            , appInfoPrivateKey = pk
+            }
+
+    envTokenCache <- newIORef mempty
+
     run (cliArgumentsPort ctx) (hintmanApp Env{..})

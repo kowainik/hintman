@@ -14,21 +14,23 @@ import GitHub.Request (executeRequest)
 
 import Hintman.Core.PrInfo (Owner (..), PrNumber (..), Repo (..))
 import Hintman.Core.Review (Comment (..), PullRequestReview (..), ReviewEvent (..))
+import Hintman.Core.Token (GitHubToken (..))
 
 
 {- | This function submits PR review according to the following API endpoint:
 
 * https://developer.github.com/v3/pulls/reviews/#create-a-pull-request-review
 -}
+-- TODO: use PrInfo data type here
 submitReview
-    :: Owner
+    :: GitHubToken
+    -> Owner
     -> Repo
     -> PrNumber
     -> [Comment]
     -> IO ()
-submitReview (Owner owner) (Repo repo) (PrNumber prNumber) comments = do
-    -- TODO: use proper token here
-    response <- executeRequest (OAuth "dummy-token") reviewCommand
+submitReview (GitHubToken token) (Owner owner) (Repo repo) (PrNumber prNumber) comments = do
+    response <- executeRequest (OAuth token) reviewCommand
     case response of
         Left err -> print err
         Right _  -> putStrLn "Success!"

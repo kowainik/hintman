@@ -38,15 +38,19 @@ common common-options
   default-extensions:  ConstraintKinds
                        DeriveGeneric
                        DerivingStrategies
-                       InstanceSigs
+                       FlexibleContexts
+                       FlexibleInstances
                        GeneralizedNewtypeDeriving
+                       InstanceSigs
                        LambdaCase
+                       MultiParamTypeClasses
                        OverloadedStrings
                        RecordWildCards
                        ScopedTypeVariables
                        StandaloneDeriving
                        TupleSections
                        TypeApplications
+                       TypeSynonymInstances
                        ViewPatterns
 
 library
@@ -58,14 +62,19 @@ library
                            Hintman.App.Env
                            Hintman.App.Monad
 
+                         Hintman.Core.Key
                          Hintman.Core.PrInfo
                          Hintman.Core.Review
+                         Hintman.Core.Token
+
+                         Hintman.Effect.TokenStorage
 
                          Hintman.Cli
                          Hintman.Comment
                          Hintman.Config
                          Hintman.Diff
                          Hintman.HLint
+                         Hintman.Installation
                          Hintman.Webhook
 
                          Hintman.Suggestion.Core
@@ -76,6 +85,7 @@ library
   build-depends:       aeson
                      , bytestring ^>= 0.10.8.2
                      , containers
+                     , cryptonite ^>= 0.25
                      , diff-parse ^>= 0.2.1
                      , filepath ^>= 1.4
                      , github ^>= 0.22
@@ -84,6 +94,7 @@ library
                      , http-client ^>= 0.6.4
                      , http-client-tls ^>= 0.3.5
                      , http-types
+                     , jwt ^>= 0.10
                      , optparse-applicative ^>= 0.15.0.0
                      , servant ^>= 0.16
                      , servant-client ^>= 0.16
@@ -93,8 +104,11 @@ library
                      , time >= 1.8 && < 1.10
                      , tomland ^>= 1.1.0.1
                      , transformers ^>= 0.5.5.0
+                     , unordered-containers
                      , wai ^>= 3.2
                      , warp ^>= 3.2
+                     , x509 ^>= 1.7.5
+                     , x509-store ^>= 1.6.7
 
 executable hintman
   import:              common-options
@@ -115,9 +129,9 @@ test-suite hintman-test
                        Test.Suggestion
   main-is:             Spec.hs
 
-  build-depends:       hedgehog ^>= 0.6
+  build-depends:       hedgehog ^>= 1.0
                      , hintman
-                     , hspec ^>= 2.6.1
+                     , hspec ^>= 2.7.1
                      , silently
                      , text ^>= 1.2.3
                      , temporary

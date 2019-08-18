@@ -56,6 +56,7 @@ getFileHLintSuggestions (fileName, content) = case content of
 -- | In-memory file download from GitHub PR sources by given URL.
 downloadFile :: MonadIO m => Text -> m (Maybe ByteString)
 downloadFile url = do
+    -- TODO: put in the context to not create each time
     man <- newTlsManager
     let req = fromString $ toString url
     -- log I $ "Attempting to download file from " <> url <> " ..."

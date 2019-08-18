@@ -23,11 +23,11 @@ data PrInfo = PrInfo
 
 newtype Owner = Owner
     { unOwner :: Text
-    } deriving newtype (ToHttpApiData)
+    } deriving newtype (Show, Eq, Hashable, ToHttpApiData)
 
 newtype Repo = Repo
     { unRepo :: Text
-    } deriving newtype (ToHttpApiData)
+    } deriving newtype (Show, Eq, Hashable, ToHttpApiData)
 
 newtype Branch = Branch
     { unBranch :: Text

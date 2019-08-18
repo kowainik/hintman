@@ -22,7 +22,7 @@ GitHub application to suggest hints
 1. Run `smee` forwarder in a separate terminal window:
     + `smee -u "https://smee.io/uTG0BCXnjq4DEff7" -p 8080`
 2. Run `backend`:
-    + `cabal new-run hintman -- -p 8080`
+    + `KEY=<SECRET_KEY> PK_PATH=<PATH_TO_PEM_FILE> cabal new-run hintman -- -p 8080`
 3. Open GitHub application and press `Configure` button to add it to your account:
     + https://github.com/apps/hint-man
 4. After adding access to your personal profile, choose `Select repositories`
@@ -35,12 +35,3 @@ GitHub application to suggest hints
 
 Current backend just prints to terminal all incoming requests. GitHub app
 installation is one of those requests.
-
-TODO: describe tokens
-
-```
-# Initialize variables for GitHub App
-export GITHUB_APP_IDENTIFIER=12345
-export GITHUB_WEBHOOK_SECRET="XXXXXXX" # This is optional, depends on whether we will be using the webhook_secret for our app
-export GITHUB_PRIVATE_KEY=`awk '{printf "%s\\n", $0}' hintman-private-key.pem`
-```
