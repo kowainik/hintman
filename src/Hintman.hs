@@ -2,6 +2,7 @@ module Hintman
        ( runHintman
        ) where
 
+import Colog (richMessageAction)
 import Data.X509 (PrivKey (PrivKeyRSA))
 import Data.X509.File (readKeyFile)
 import Network.Wai.Handler.Warp (run)
@@ -47,5 +48,6 @@ runOn ctx = do
             }
 
     envTokenCache <- newIORef mempty
+    let envLogAction = richMessageAction
 
     run (cliArgumentsPort ctx) (hintmanApp Env{..})

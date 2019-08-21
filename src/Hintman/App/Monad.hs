@@ -2,6 +2,7 @@
 
 module Hintman.App.Monad
        ( App (..)
+       , AppEnv
        , runAppAsHandler
        ) where
 
@@ -10,12 +11,13 @@ import Servant (Handler (..))
 
 import Hintman.App.Env (Env)
 
+type AppEnv = Env App
 
 -- | Main application monad.
 newtype App a = App
-    { unApp :: ReaderT Env IO a
-    } deriving (Functor, Applicative, Monad, MonadReader Env, MonadIO)
+    { unApp :: ReaderT AppEnv IO a
+    } deriving (Functor, Applicative, Monad, MonadReader AppEnv, MonadIO)
 
 -- | Running 'App' as 'Handler'.
-runAppAsHandler :: Env -> App a -> Handler a
+runAppAsHandler :: AppEnv -> App a -> Handler a
 runAppAsHandler env = Handler . ExceptT . try . usingReaderT env . unApp

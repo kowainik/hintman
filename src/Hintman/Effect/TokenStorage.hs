@@ -32,7 +32,6 @@ insertTokenImpl
     -> GitHubToken
     -> m ()
 insertTokenImpl owner repo key = do
-    putTextLn $ "Inserting token for: " <> show owner <> "/" <> show repo
     ref <- grab @TokenCache
     atomicModifyIORef' ref $ \cache -> (HM.insert (owner, repo) key cache, ())
 

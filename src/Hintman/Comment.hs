@@ -23,17 +23,18 @@ import Hintman.Core.Token (GitHubToken (..))
 -}
 -- TODO: use PrInfo data type here
 submitReview
-    :: GitHubToken
+    :: (MonadIO m, WithLog env m)
+    => GitHubToken
     -> Owner
     -> Repo
     -> PrNumber
     -> [Comment]
-    -> IO ()
+    -> m ()
 submitReview (GitHubToken token) (Owner owner) (Repo repo) (PrNumber prNumber) comments = do
-    response <- executeRequest (OAuth token) reviewCommand
+    response <- liftIO $ executeRequest (OAuth token) reviewCommand
     case response of
-        Left err -> print err
-        Right _  -> putStrLn "Success!"
+        Left err -> log E $ "Error submitting review: " <> show err
+        Right _  -> log I "Successfully submitted review!"
   where
     reviewCommand :: Request 'RW Value
     reviewCommand = command

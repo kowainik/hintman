@@ -30,7 +30,7 @@ For this we need:
 5. Return the list of all 'Idea's.
 
 -}
-runHLint :: MonadIO m => PrInfo -> m [Idea]
+runHLint :: (MonadIO m, WithLog env m) => PrInfo -> m [Idea]
 runHLint prInfo@PrInfo{..} = do
     let modFiles = filter ((==) ".hs" . takeExtension) $ getModifiedFiles prInfoDelta
     let getContent = downloadFile . createFileDownloadUrl prInfo
@@ -42,34 +42,32 @@ getModifiedFiles :: FileDeltas -> [FilePath]
 getModifiedFiles = map (toString . fileDeltaDestFile) . filter ((/=) Deleted . fileDeltaStatus)
 
 
-getFileHLintSuggestions :: MonadIO m => (FilePath, Maybe ByteString) -> m [Idea]
+getFileHLintSuggestions :: (MonadIO m, WithLog env m) => (FilePath, Maybe ByteString) -> m [Idea]
 getFileHLintSuggestions (fileName, content) = case content of
-    -- TODO: logging
-    Nothing -> [] <$ putStrLn ("Content is empty: " <> fileName)
+    Nothing -> [] <$ log I ("Content is empty: " <> toText fileName)
     Just (decodeUtf8 -> c) -> do
         (flags, classify, hint) <- liftIO autoSettings
-        liftIO $ parseModuleEx flags fileName (Just c) >>= \case
+        liftIO (parseModuleEx flags fileName (Just c)) >>= \case
             Right m -> pure $ applyHints classify hint [m]
-            -- TODO: display error in logging
-            Left _e -> error "Hlint failed with some error"
+            Left _err -> [] <$ log E "Hlint failed with some error" -- TODO: log err
 
 -- | In-memory file download from GitHub PR sources by given URL.
-downloadFile :: MonadIO m => Text -> m (Maybe ByteString)
+downloadFile :: (MonadIO m, WithLog env m) => Text -> m (Maybe ByteString)
 downloadFile url = do
     -- TODO: put in the context to not create each time
     man <- newTlsManager
     let req = fromString $ toString url
-    -- log I $ "Attempting to download file from " <> url <> " ..."
+    log I $ "Attempting to download file from " <> url <> " ..."
     response <- liftIO $ httpLbs req man
     let status = statusCode $ responseStatus response
     let body = responseBody response
-    -- log D $ "Recieved a status code of " <> show status <> " from " <> url
+    log D $ "Recieved a status code of " <> show status <> " from " <> url
     case status of
-        200 ->
-            -- log I $ "Successfully downloaded file from " <> url
+        200 -> do
+            log I $ "Successfully downloaded file from " <> url
             pure $ Just $ toStrict body
-        _   ->
-            -- log E $ "Couldn't download file from " <> url
+        _   -> do
+            log E $ "Couldn't download file from " <> url
             pure Nothing
 
 

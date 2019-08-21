@@ -84,6 +84,7 @@ library
 
   build-depends:       aeson
                      , bytestring ^>= 0.10.8.2
+                     , co-log ^>= 0.3.0.0
                      , containers
                      , cryptonite ^>= 0.25
                      , diff-parse ^>= 0.2.1
@@ -129,7 +130,8 @@ test-suite hintman-test
                        Test.Suggestion
   main-is:             Spec.hs
 
-  build-depends:       hedgehog ^>= 1.0
+  build-depends:       co-log
+                     , hedgehog ^>= 1.0
                      , hintman
                      , hspec ^>= 2.7.1
                      , silently

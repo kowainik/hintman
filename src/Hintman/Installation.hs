@@ -30,9 +30,9 @@ jwtExpiryTime = 600
 {- | Create JWT token that will be used later to issue
 'InstallationAccessToken'.
 -}
-mkAuthToken :: AppInfo -> IO JwtToken
+mkAuthToken :: MonadIO m => AppInfo -> m JwtToken
 mkAuthToken AppInfo{..} = do
-    currentTime <- utcTimeToPOSIXSeconds <$> getCurrentTime
+    currentTime <- liftIO $ utcTimeToPOSIXSeconds <$> getCurrentTime
     let expiresAt = currentTime + jwtExpiryTime
     let issuer = stringOrURI $ show @Text appInfoId
     let claimSet  = mempty
@@ -45,9 +45,9 @@ mkAuthToken AppInfo{..} = do
 
 {- | Create HTTP request from the generated token
 -}
-mkTokenRequest :: InstallationId -> JwtToken -> IO Request
+mkTokenRequest ::MonadIO m => InstallationId -> JwtToken -> m Request
 mkTokenRequest (InstallationId installationId) (JwtToken token) = do
-    request <- parseUrlThrow $ toString $ mconcat
+    request <- liftIO $ parseUrlThrow $ toString $ mconcat
         [ "https://api.github.com/installations/"
         , installationId
         , "/access_tokens"
@@ -64,23 +64,27 @@ mkTokenRequest (InstallationId installationId) (JwtToken token) = do
 
 {- | Query GitHub to ask access token.
 -}
-createAccessToken :: InstallationId -> AppInfo -> IO (Maybe InstallationAccessToken)
+createAccessToken
+    :: (MonadIO m, WithLog env m)
+    => InstallationId
+    -> AppInfo
+    -> m (Maybe InstallationAccessToken)
 createAccessToken installationId appInfo = do
     jwtToken <- mkAuthToken appInfo
     request  <- mkTokenRequest installationId jwtToken
 
     -- TODO: put in the context to not create each time
     manager  <- newTlsManager
-    response <- httpLbs request manager
+    response <- liftIO $ httpLbs request manager
 
     -- TODO: remove code duplication with @downloadFile@
     let status = statusCode $ responseStatus response
     let body = responseBody response
-    -- log D $ "Recieved a status code of " <> show status <> " from " <> url
+    log D $ "Recieved a status code of " <> show status <> " from " <> show installationId
     if status `elem` [200, 201]
-        then
-            -- log I $ "Successfully downloaded file from " <> url
+        then do
+            log I $ "Successfully created token from: " <> show installationId
             pure $ decode body
-        else
-            -- log E $ "Couldn't download file from " <> url
+        else do
+            log E $ "Couldn't create token from: " <> show installationId
             pure Nothing

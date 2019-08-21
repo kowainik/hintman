@@ -26,7 +26,7 @@ data AppInfo = AppInfo
 -}
 newtype InstallationId = InstallationId
     { unInstallationId :: Text
-    }
+    } deriving stock (Show)
 
 {- | GitHub access token.
 -}

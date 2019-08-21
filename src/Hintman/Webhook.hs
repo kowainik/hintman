@@ -16,7 +16,7 @@ import Servant.API.Generic ((:-), ToServantApi, toServant)
 import Servant.GitHub.Webhook (GitHubEvent, GitHubSignedReqBody, RepoWebhookEvent (..))
 import Servant.Server.Generic (AsServerT)
 
-import Hintman.App (App, Env (..), Has, grab, runAppAsHandler)
+import Hintman.App (App, AppEnv, Env (..), Has, grab, runAppAsHandler)
 import Hintman.Core.Key (GitHubKey)
 import Hintman.Core.PrInfo (Owner (..), Repo (..))
 import Hintman.Core.Token (AppInfo, InstallationAccessToken (..), InstallationId (..))
@@ -57,62 +57,63 @@ issueCommentHook :: MonadIO m => RepoWebhookEvent -> ((), PullRequestEvent) -> m
 issueCommentHook _ ev = print $ evPullReqPayload $ snd ev
 
 appInstalledHook
-    :: (MonadIO m, MonadTokenStorage m, MonadReader env m, Has AppInfo env)
+    :: (MonadIO m, MonadTokenStorage m, Has AppInfo env, WithLog env m)
     => RepoWebhookEvent
     -> ((), InstallationEvent)
     -> m ()
 appInstalledHook _ ((), ev) = do
-    putTextLn "'InstallationEvent' triggered"
+    log D "'InstallationEvent' triggered"
     let installationId = InstallationId $ show $ whInstallationId $ evInstallationInfo ev
     let owner = whInstallationAccount $ evInstallationInfo ev
     case evInstallationAction ev of
         InstallationCreatedAction -> do
-            putTextLn "InstallationCreatedAction"
+            log D "InstallationCreatedAction"
             appInfo <- grab @AppInfo
-            liftIO (createAccessToken installationId appInfo) >>= \case
-                Nothing -> putTextLn "Failed to create access token"
+            createAccessToken installationId appInfo >>= \case
+                Nothing -> log E "Failed to create access token"
                 Just token -> for_ (evInstallationRepos ev) (cacheRepo token owner)
-        InstallationDeletedAction -> putTextLn "App deleted" -- TODO: delete all
+        InstallationDeletedAction -> log I "App deleted" -- TODO: delete all
         InstallationActionOther _ -> error "Unknown action"  -- TODO: proper error with logging
 
 repoInstalledHook
-    :: (MonadIO m, MonadTokenStorage m, MonadReader env m, Has AppInfo env)
+    :: (MonadIO m, MonadTokenStorage m, Has AppInfo env, WithLog env m)
     => RepoWebhookEvent
     -> ((), InstallationRepositoriesEvent)
     -> m ()
 repoInstalledHook _ ((), ev) = do
-    putTextLn "'InstallationRepositoriesEvent' triggered"
+    log D "'InstallationRepositoriesEvent' triggered"
     let installationId = InstallationId $ show $ whInstallationId $ evInstallationRepoInfo ev
     let owner = whInstallationAccount $ evInstallationRepoInfo ev
     case evInstallationRepoAction ev of
         InstallationRepoCreatedAction -> do
-            putTextLn "InstallationRepoCreatedAction"
+            log D "InstallationRepoCreatedAction"
             appInfo <- grab @AppInfo
-            liftIO (createAccessToken installationId appInfo) >>= \case
+            createAccessToken installationId appInfo >>= \case
                 Nothing -> putTextLn "Failed to create access token"
                 Just token -> for_ (evInstallationReposAdd ev) (cacheRepo token owner)
-        InstallationRepoRemovedAction -> putTextLn "Repo deleted"
+        InstallationRepoRemovedAction -> log I "Repo deleted"
         InstallationRepoActionOther _ -> error "Unknown action"  -- TODO: proper error with logging
 
 cacheRepo
-    :: MonadTokenStorage m
+    :: (MonadTokenStorage m, WithLog env m)
     => InstallationAccessToken
     -> HookUser
     -> HookRepositorySimple
     -> m ()
-cacheRepo token owner repo = insertToken
-    (Owner $ whUserLogin owner)
-    (Repo $ whSimplRepoName repo)
-    (iatToken token)
+cacheRepo token hookUser hookRepo = do
+    let owner = Owner $ whUserLogin hookUser
+    let repo  = Repo $ whSimplRepoName hookRepo
+    log D $ "Inserting token for " <> show owner <> "/" <> show repo
+    insertToken owner repo (iatToken token)
 
-server :: Env -> Server HintmanAPI
+server :: AppEnv -> Server HintmanAPI
 server env@Env{..} = hoistServerWithContext
     (Proxy @HintmanAPI)
     (Proxy @'[ GitHubKey ])
     (runAppAsHandler env)
     (toServant hintmanServer)
 
-hintmanApp :: Env -> Application
+hintmanApp :: AppEnv -> Application
 hintmanApp env@Env{..} = serveWithContext
     (Proxy @HintmanAPI)
     (envGitHubKey :. EmptyContext)
