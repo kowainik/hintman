@@ -16,12 +16,12 @@ import Servant.API.Generic ((:-), ToServantApi, toServant)
 import Servant.GitHub.Webhook (GitHubEvent, GitHubSignedReqBody, RepoWebhookEvent (..))
 import Servant.Server.Generic (AsServerT)
 
-import Hintman.App (App, AppEnv, Env (..), Has, grab, runAppAsHandler)
+import Hintman.App (App, AppEnv, Env (..), Has, WithError, runAppAsHandler)
 import Hintman.Core.Key (GitHubKey)
 import Hintman.Core.PrInfo (Owner (..), Repo (..))
-import Hintman.Core.Token (AppInfo, InstallationAccessToken (..), InstallationId (..))
+import Hintman.Core.Token (AppInfo, InstallationId (..), InstallationToken (..))
 import Hintman.Effect.TokenStorage (MonadTokenStorage (..))
-import Hintman.Installation (createAccessToken)
+import Hintman.Installation (createInstallationToken)
 
 
 data HintmanSite route = HintmanSite
@@ -57,7 +57,7 @@ issueCommentHook :: MonadIO m => RepoWebhookEvent -> ((), PullRequestEvent) -> m
 issueCommentHook _ ev = print $ evPullReqPayload $ snd ev
 
 appInstalledHook
-    :: (MonadIO m, MonadTokenStorage m, Has AppInfo env, WithLog env m)
+    :: (MonadIO m, MonadTokenStorage m, Has AppInfo env, WithError m, WithLog env m)
     => RepoWebhookEvent
     -> ((), InstallationEvent)
     -> m ()
@@ -68,15 +68,13 @@ appInstalledHook _ ((), ev) = do
     case evInstallationAction ev of
         InstallationCreatedAction -> do
             log D "InstallationCreatedAction"
-            appInfo <- grab @AppInfo
-            createAccessToken installationId appInfo >>= \case
-                Nothing -> log E "Failed to create access token"
-                Just token -> for_ (evInstallationRepos ev) (cacheRepo token owner)
+            token <- createInstallationToken installationId
+            for_ (evInstallationRepos ev) (cacheRepo token owner)
         InstallationDeletedAction -> log I "App deleted" -- TODO: delete all
         InstallationActionOther _ -> error "Unknown action"  -- TODO: proper error with logging
 
 repoInstalledHook
-    :: (MonadIO m, MonadTokenStorage m, Has AppInfo env, WithLog env m)
+    :: (MonadIO m, MonadTokenStorage m, Has AppInfo env, WithError m, WithLog env m)
     => RepoWebhookEvent
     -> ((), InstallationRepositoriesEvent)
     -> m ()
@@ -87,16 +85,14 @@ repoInstalledHook _ ((), ev) = do
     case evInstallationRepoAction ev of
         InstallationRepoCreatedAction -> do
             log D "InstallationRepoCreatedAction"
-            appInfo <- grab @AppInfo
-            createAccessToken installationId appInfo >>= \case
-                Nothing -> putTextLn "Failed to create access token"
-                Just token -> for_ (evInstallationReposAdd ev) (cacheRepo token owner)
+            token <- createInstallationToken installationId
+            for_ (evInstallationReposAdd ev) (cacheRepo token owner)
         InstallationRepoRemovedAction -> log I "Repo deleted"
         InstallationRepoActionOther _ -> error "Unknown action"  -- TODO: proper error with logging
 
 cacheRepo
     :: (MonadTokenStorage m, WithLog env m)
-    => InstallationAccessToken
+    => InstallationToken
     -> HookUser
     -> HookRepositorySimple
     -> m ()
@@ -104,7 +100,7 @@ cacheRepo token hookUser hookRepo = do
     let owner = Owner $ whUserLogin hookUser
     let repo  = Repo $ whSimplRepoName hookRepo
     log D $ "Inserting token for " <> show owner <> "/" <> show repo
-    insertToken owner repo (iatToken token)
+    insertToken owner repo token
 
 server :: AppEnv -> Server HintmanAPI
 server env@Env{..} = hoistServerWithContext

@@ -10,30 +10,34 @@ module Hintman.Effect.TokenStorage
 
 import Hintman.App (App, Has, TokenCache, grab)
 import Hintman.Core.PrInfo (Owner, Repo)
-import Hintman.Core.Token (GitHubToken)
+import Hintman.Core.Token (InstallationToken)
 
 import qualified Data.HashMap.Strict as HM
 
 
 class Monad m => MonadTokenStorage m where
-    insertToken :: Owner -> Repo -> GitHubToken -> m ()
+    insertToken :: Owner -> Repo -> InstallationToken -> m ()
     deleteToken :: Owner -> Repo -> m ()
-    lookupToken :: Owner -> Repo -> m (Maybe GitHubToken)
+    lookupToken :: Owner -> Repo -> m (Maybe InstallationToken)
 
 instance MonadTokenStorage App where
     insertToken = insertTokenImpl
     deleteToken = deleteTokenImpl
     lookupToken = lookupTokenImpl
 
+----------------------------------------------------------------------------
+-- Internals
+----------------------------------------------------------------------------
+
 insertTokenImpl
     :: (MonadReader env m, Has TokenCache env, MonadIO m)
     => Owner
     -> Repo
-    -> GitHubToken
+    -> InstallationToken
     -> m ()
-insertTokenImpl owner repo key = do
+insertTokenImpl owner repo token = do
     ref <- grab @TokenCache
-    atomicModifyIORef' ref $ \cache -> (HM.insert (owner, repo) key cache, ())
+    atomicModifyIORef' ref $ \cache -> (HM.insert (owner, repo) token cache, ())
 
 deleteTokenImpl
     :: (MonadReader env m, Has TokenCache env, MonadIO m)
@@ -48,7 +52,7 @@ lookupTokenImpl
     :: (MonadReader env m, Has TokenCache env, MonadIO m)
     => Owner
     -> Repo
-    -> m (Maybe GitHubToken)
+    -> m (Maybe InstallationToken)
 lookupTokenImpl owner repo = do
     ref <- grab @TokenCache
     cache <- readIORef ref

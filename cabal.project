@@ -1,6 +1,0 @@
-packages: .
-
-source-repository-package
-    type: git
-    location: https://github.com/kowainik/servant-github-webhook.git
-    tag: 5d5d54de6da5bd1ce60eb9c623e1fa555cbba10a

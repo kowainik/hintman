@@ -13,10 +13,10 @@ import Colog (HasLog (..), LogAction, Message)
 import Hintman.Config (HintmanConfig)
 import Hintman.Core.Key (GitHubKey)
 import Hintman.Core.PrInfo (Owner, Repo)
-import Hintman.Core.Token (AppInfo, GitHubToken)
+import Hintman.Core.Token (AppInfo, InstallationToken)
 
 
-type TokenCache = IORef (HashMap (Owner, Repo) GitHubToken)
+type TokenCache = IORef (HashMap (Owner, Repo) InstallationToken)
 
 data Env m = Env
     { envConfig     :: !HintmanConfig

@@ -5,11 +5,11 @@ module Hintman.Core.Token
        ( AppInfo (..)
        , GitHubToken (..)
        , InstallationId (..)
-       , InstallationAccessToken (..)
+       , InstallationToken (..)
        ) where
 
 import Crypto.PubKey.RSA (PrivateKey)
-import Data.Aeson (withObject, withText, (.:))
+import Data.Aeson (withText)
 
 
 {- | Information about GitHub application required for authentication.
@@ -39,15 +39,10 @@ instance FromJSON GitHubToken where
 
 {- | Token that can be used to authenticate requests from the GitHub app. The
 value of 'iatToken' can be used with 'OAuth' constructor from the @github@
-library to sign requests.
+library to sign requests. Contains enough information to be renewed.
 -}
-data InstallationAccessToken = InstallationAccessToken
-    { iatToken     :: !GitHubToken
-    , iatExpiresAt :: !UTCTime
+data InstallationToken = InstallationToken
+    { itToken          :: !GitHubToken
+    , itExpiresAt      :: !UTCTime
+    , itInstallationId :: !InstallationId
     }
-
-instance FromJSON InstallationAccessToken where
-    parseJSON = withObject "InstallationAccessToken" $ \o -> do
-        iatToken     <- o .: "token"
-        iatExpiresAt <- o .: "expires_at"
-        pure InstallationAccessToken{..}

@@ -2,11 +2,11 @@ resolver: lts-14.1
 
 extra-deps:
   - diff-parse-0.2.1
-  - hlint-2.2.2
-  - ghc-lib-parser-8.8.0.20190723  # for hlint
+  - optparse-applicative-0.15.0.0
+  - servant-github-webhook-0.4.2.0
+
   - github-0.22
   - binary-instances-1    # for github
-  - optparse-applicative-0.15.0.0
 
-  - git: https://github.com/kowainik/servant-github-webhook.git
-    commit: 5d5d54de6da5bd1ce60eb9c623e1fa555cbba10a
+  - hlint-2.2.2
+  - ghc-lib-parser-8.8.0.20190723  # for hlint

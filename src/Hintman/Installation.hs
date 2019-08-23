@@ -2,22 +2,26 @@
 -}
 
 module Hintman.Installation
-       ( createAccessToken
+       ( createInstallationToken
+       , renewToken
        ) where
 
 import Prelude hiding (exp)
 
-import Data.Aeson (decode)
-import Data.Time (NominalDiffTime, getCurrentTime)
+import Data.Aeson (decode, withObject, (.:))
+import Data.Time (NominalDiffTime, diffUTCTime, getCurrentTime)
 import Data.Time.Clock.POSIX (utcTimeToPOSIXSeconds)
 import Network.HTTP.Client (Request (..), Response (..), httpLbs, parseUrlThrow)
 import Network.HTTP.Client.TLS (newTlsManager)
 import Network.HTTP.Types (Status (..))
 import Web.JWT (JWTClaimsSet (..), Signer (RSAPrivateKey), encodeSigned, numericDate, stringOrURI)
 
-import Hintman.Core.Token (AppInfo (..), InstallationAccessToken, InstallationId (..))
+import Hintman.App (AppErrorType (..), Has, WithError, grab, throwError)
+import Hintman.Core.Token (AppInfo (..), GitHubToken, InstallationId (..), InstallationToken (..))
 
 
+{- | Internal data type representing the result of 'encodeSigned' function.
+-}
 newtype JwtToken = JwtToken Text
     deriving (Show)
 
@@ -45,7 +49,7 @@ mkAuthToken AppInfo{..} = do
 
 {- | Create HTTP request from the generated token
 -}
-mkTokenRequest ::MonadIO m => InstallationId -> JwtToken -> m Request
+mkTokenRequest :: MonadIO m => InstallationId -> JwtToken -> m Request
 mkTokenRequest (InstallationId installationId) (JwtToken token) = do
     request <- liftIO $ parseUrlThrow $ toString $ mconcat
         [ "https://api.github.com/installations/"
@@ -62,14 +66,28 @@ mkTokenRequest (InstallationId installationId) (JwtToken token) = do
             ]
         }
 
+{- | Internal data type for parsing GitHub response containing access token for
+Hintman.
+-}
+data AccessToken = AccessToken
+    { atToken     :: !GitHubToken
+    , atExpiresAt :: !UTCTime
+    }
+
+instance FromJSON AccessToken where
+    parseJSON = withObject "AccessToken" $ \o -> do
+        atToken     <- o .: "token"
+        atExpiresAt <- o .: "expires_at"
+        pure AccessToken{..}
+
 {- | Query GitHub to ask access token.
 -}
-createAccessToken
-    :: (MonadIO m, WithLog env m)
+createInstallationToken
+    :: (MonadIO m, Has AppInfo env, WithError m, WithLog env m)
     => InstallationId
-    -> AppInfo
-    -> m (Maybe InstallationAccessToken)
-createAccessToken installationId appInfo = do
+    -> m InstallationToken
+createInstallationToken installationId = do
+    appInfo  <- grab @AppInfo
     jwtToken <- mkAuthToken appInfo
     request  <- mkTokenRequest installationId jwtToken
 
@@ -84,7 +102,31 @@ createAccessToken installationId appInfo = do
     if status `elem` [200, 201]
         then do
             log I $ "Successfully created token from: " <> show installationId
-            pure $ decode body
+            case decode @AccessToken body of
+                Nothing -> throwError $ ServerError $
+                    "Error decoding token from: " <> decodeUtf8 body
+                Just AccessToken{..} -> pure InstallationToken
+                    { itToken = atToken
+                    , itExpiresAt = atExpiresAt
+                    , itInstallationId = installationId
+                    }
         else do
-            log E $ "Couldn't create token from: " <> show installationId
-            pure Nothing
+            log E $ "Couldn't create token for: " <> show installationId
+            throwError $ ServerError $
+                "Invalid status " <> show status <> " for " <> show installationId
+
+{- | This function takes 'InstallationAccessToken' and either returns itself if
+it can live long enough or creates a new token by calling 'createAccessToken'
+function. 'InstallationToken' contains enough information to be renewed.
+-}
+renewToken
+    :: (MonadIO m, Has AppInfo env, WithError m, WithLog env m)
+    => InstallationToken
+    -> m InstallationToken
+renewToken token@InstallationToken{..} = do
+    now <- liftIO getCurrentTime
+
+    -- if less than 10 seconds left for token expiration, create new one
+    if now `diffUTCTime` itExpiresAt <= 10
+        then createInstallationToken itInstallationId
+        else pure token
