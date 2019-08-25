@@ -5,7 +5,7 @@ module Test.HLint
 import Colog (LoggerT, usingLoggerT)
 import Test.Hspec (Spec, describe, it, shouldBe)
 
-import Hintman.HLint (runHLint)
+import Hintman.HLint (createComment, runHLint)
 
 import Test.Data (pr1, pr2)
 
@@ -18,6 +18,8 @@ hlintSpec = describe "HLint works on opened PRs" $ do
         pr1 >>= runLog . runHLint >>= shouldBe []
     it "works on code PRs" $
         pr2 >>= runLog . runHLint >>= shouldBe [etaReduce] . map show
+    it "creates correct comment for PR 2" $
+        pr2 >>= runLog . runHLint >>= shouldBe [etaComment] . map createComment
   where
     etaReduce :: Text
     etaReduce = unlines
@@ -26,4 +28,12 @@ hlintSpec = describe "HLint works on opened PRs" $ do
         , "  greet x = (++) \"Hello \" x"
         , "Perhaps:"
         , "  greet = (++) \"Hello \""
+        ]
+
+    etaComment :: Maybe Text
+    etaComment = Just $ unlines
+        [ "Warning: Eta reduce"
+        , "```suggestion"
+        , "greet = (++) \"Hello \""
+        , "```"
         ]

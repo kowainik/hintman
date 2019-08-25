@@ -4,9 +4,11 @@ in PRs.
 
 module Hintman.HLint
        ( runHLint
+       , createComment
        ) where
 
-import Language.Haskell.HLint4 (Idea, applyHints, autoSettings, parseModuleEx)
+import Language.Haskell.HLint4 (Idea (..), Note (..), Severity (..), applyHints, autoSettings,
+                                parseModuleEx)
 import Network.HTTP.Client (Response (..), httpLbs)
 import Network.HTTP.Client.TLS (newTlsManager)
 import Network.HTTP.Types (Status (..))
@@ -89,3 +91,29 @@ createFileDownloadUrl PrInfo{..} (toText -> file) = T.intercalate "/"
     , unBranch prInfoBranch
     , file
     ]
+
+{- | Creates the comment text from the HLint 'Idea's.
+-}
+createComment :: Idea -> Maybe Text
+createComment Idea{..} = ideaTo >>= \to ->
+    if ideaSeverity == Ignore
+    then Nothing
+    else Just $ unlines $
+        (if ideaHint == "" then "" else show ideaSeverity <> ": " <> toText ideaHint)
+        : mkSuggestion to
+       ++ [ "Note: " <> n | let n = showNotes ideaNote, n /= ""]
+  where
+    mkSuggestion :: String -> [Text]
+    mkSuggestion to =
+        [ "```suggestion"
+        , toText to
+        , "```"
+        ]
+
+    -- This function is copy-pasted from HLint sources.
+    showNotes :: [Note] -> Text
+    showNotes = T.intercalate ", " . map show . filter use
+      where
+        use :: Note -> Bool
+        use ValidInstance{} = False -- Not important enough to tell an end user
+        use _               = True
