@@ -16,7 +16,12 @@ import Hintman.Core.PrInfo (Owner, Repo)
 import Hintman.Core.Token (AppInfo, InstallationToken)
 
 
-type TokenCache = IORef (HashMap (Owner, Repo) InstallationToken)
+{- | Stores mapping from 'Owner' and 'Repo' (minimal required information to
+identify @installation_id@ by incoming PR) to a 'MVar' that stores
+'InstallationToken'. 'MVar' is required to block on token so concurrent accesses
+to the token won't renew it twice making one of the token invalid.
+-}
+type TokenCache = IORef (HashMap (Owner, Repo) (MVar InstallationToken))
 
 data Env m = Env
     { envConfig     :: !HintmanConfig

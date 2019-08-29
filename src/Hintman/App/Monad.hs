@@ -17,6 +17,7 @@ import Control.Exception (catch, throwIO, try)
 import Control.Monad.Except (MonadError (..), liftEither)
 import Relude.Extra.Bifunctor (firstF)
 import Servant (Handler (..))
+import UnliftIO (MonadUnliftIO)
 
 import Hintman.App.Env (Env)
 import Hintman.App.Error (AppError, AppException (..), toHttpError)
@@ -28,7 +29,8 @@ type AppEnv = Env App
 -- | Main application monad.
 newtype App a = App
     { unApp :: ReaderT AppEnv IO a
-    } deriving newtype (Functor, Applicative, Monad, MonadReader AppEnv, MonadIO)
+    } deriving newtype ( Functor, Applicative, Monad, MonadReader AppEnv
+                       , MonadIO, MonadUnliftIO)
 
 instance MonadError AppError App where
     throwError :: AppError -> App a
