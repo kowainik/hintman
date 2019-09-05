@@ -9,7 +9,7 @@ module Hintman.Core.Token
        ) where
 
 import Crypto.PubKey.RSA (PrivateKey)
-import Data.Aeson (withText)
+import Data.Aeson (withObject, withText, (.:))
 
 
 {- | Information about GitHub application required for authentication.
@@ -25,8 +25,17 @@ data AppInfo = AppInfo
 {- | Id of the GitHub app installation action. Used to issue access tokens.
 -}
 newtype InstallationId = InstallationId
-    { unInstallationId :: Text
+    { unInstallationId :: Int
     } deriving stock (Show)
+
+{- | This instances parses 'InstallationId' from the following endpoint:
+
+* https://developer.github.com/v3/apps/#list-installations
+-}
+instance FromJSON InstallationId where
+    parseJSON = withObject "InstallationId" $ \o -> do
+        iid <- o .: "id"
+        pure $ InstallationId iid
 
 {- | GitHub access token.
 -}

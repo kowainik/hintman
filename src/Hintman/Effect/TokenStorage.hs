@@ -7,23 +7,26 @@
 module Hintman.Effect.TokenStorage
        ( MonadTokenStorage (..)
        , acquireInstallationToken
+       , initialiseInstallationIds
        ) where
 
 import UnliftIO (MonadUnliftIO)
 import UnliftIO.MVar (modifyMVar)
 
 import Hintman.App (App, AppErrorType (..), Has, TokenCache, WithError, grab, throwError)
-import Hintman.Core.PrInfo (Owner, Repo)
-import Hintman.Core.Token (AppInfo, InstallationToken)
-import Hintman.Installation (renewToken)
+import Hintman.Core.PrInfo (FullRepo, Repositories (..), displayFullRepo)
+import Hintman.Core.Token (AppInfo, InstallationId, InstallationToken (..))
+import Hintman.Installation (createInstallationToken, mkInstallationsRequest, mkJwtToken,
+                             mkRepositoriesRequest, performRequest, renewToken)
 
 import qualified Data.HashMap.Strict as HM
+import qualified Data.Text as T
 
 
 class Monad m => MonadTokenStorage m where
-    insertToken :: Owner -> Repo -> InstallationToken -> m ()
-    deleteToken :: Owner -> Repo -> m ()
-    lookupToken :: Owner -> Repo -> m (Maybe (MVar InstallationToken))
+    insertToken :: FullRepo -> InstallationToken -> m ()
+    deleteToken :: FullRepo -> m ()
+    lookupToken :: FullRepo -> m (Maybe (MVar InstallationToken))
 
 instance MonadTokenStorage App where
     insertToken = insertTokenImpl
@@ -41,15 +44,46 @@ acquireInstallationToken
        , WithError m
        , WithLog env m
        )
-    => Owner
-    -> Repo
+    => FullRepo
     -> m InstallationToken
-acquireInstallationToken owner repo = lookupToken owner repo >>= \case
+acquireInstallationToken fullRepo = lookupToken fullRepo >>= \case
     Nothing -> throwError $ ServerError $
-        "Can't find token for: " <> show owner <> "/" <> show repo
+        "Can't find token for: " <> displayFullRepo fullRepo
     Just tokenVar -> modifyMVar tokenVar $ \oldToken -> do
         newToken <- renewToken oldToken
         pure (newToken, newToken)
+
+{- | This function asks all installation ids for Hintman from GitHub. This
+function should be called only once at the application start.
+
+See the following issue for more details:
+
+* https://github.com/kowainik/hintman/issues/73
+-}
+initialiseInstallationIds
+    :: ( MonadIO m
+       , MonadTokenStorage m
+       , WithError m
+       , WithLog env m
+       , Has AppInfo env
+       )
+    => m ()
+initialiseInstallationIds = do
+    jwtToken <- mkJwtToken
+
+    installationIds <- performRequest @[InstallationId]
+        $ mkInstallationsRequest jwtToken
+
+    for_ installationIds $ \installationId -> do
+        log D $ "Installation id: " <> show installationId
+        installationToken <- createInstallationToken jwtToken installationId
+
+        Repositories repositories <- performRequest @Repositories
+            $ mkRepositoriesRequest $ itToken installationToken
+        log D $ "This ID is for the following repos: "
+            <> T.intercalate ", " (map displayFullRepo repositories)
+
+        for_ repositories $ \fullRepo -> insertToken fullRepo installationToken
 
 ----------------------------------------------------------------------------
 -- Internals
@@ -57,31 +91,28 @@ acquireInstallationToken owner repo = lookupToken owner repo >>= \case
 
 insertTokenImpl
     :: (MonadReader env m, Has TokenCache env, MonadIO m)
-    => Owner
-    -> Repo
+    => FullRepo
     -> InstallationToken
     -> m ()
-insertTokenImpl owner repo token = do
+insertTokenImpl fullRepo token = do
     tokenVar <- newMVar token
     ref <- grab @TokenCache
     atomicModifyIORef' ref $
-        \cache -> (HM.insert (owner, repo) tokenVar cache, ())
+        \cache -> (HM.insert fullRepo tokenVar cache, ())
 
 deleteTokenImpl
     :: (MonadReader env m, Has TokenCache env, MonadIO m)
-    => Owner
-    -> Repo
+    => FullRepo
     -> m ()
-deleteTokenImpl owner repo = do
+deleteTokenImpl fullRepo = do
     ref <- grab @TokenCache
-    atomicModifyIORef' ref $ \cache -> (HM.delete (owner, repo) cache, ())
+    atomicModifyIORef' ref $ \cache -> (HM.delete fullRepo cache, ())
 
 lookupTokenImpl
     :: (MonadReader env m, Has TokenCache env, MonadIO m)
-    => Owner
-    -> Repo
+    => FullRepo
     -> m (Maybe (MVar InstallationToken))
-lookupTokenImpl owner repo = do
+lookupTokenImpl fullRepo = do
     ref <- grab @TokenCache
     cache <- readIORef ref
-    pure $ HM.lookup (owner, repo) cache
+    pure $ HM.lookup fullRepo cache

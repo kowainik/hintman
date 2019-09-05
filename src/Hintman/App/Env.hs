@@ -12,7 +12,7 @@ import Colog (HasLog (..), LogAction, Message)
 
 import Hintman.Config (HintmanConfig)
 import Hintman.Core.Key (GitHubKey)
-import Hintman.Core.PrInfo (Owner, Repo)
+import Hintman.Core.PrInfo (FullRepo)
 import Hintman.Core.Token (AppInfo, InstallationToken)
 
 
@@ -21,7 +21,7 @@ identify @installation_id@ by incoming PR) to a 'MVar' that stores
 'InstallationToken'. 'MVar' is required to block on token so concurrent accesses
 to the token won't renew it twice making one of the token invalid.
 -}
-type TokenCache = IORef (HashMap (Owner, Repo) (MVar InstallationToken))
+type TokenCache = IORef (HashMap FullRepo (MVar InstallationToken))
 
 data Env m = Env
     { envConfig     :: !HintmanConfig

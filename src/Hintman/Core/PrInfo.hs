@@ -6,10 +6,18 @@ module Hintman.Core.PrInfo
        , Repo (..)
        , Branch (..)
        , PrNumber (..)
+
+         -- * Helper types for JSON interaction
+       , FullRepo (..)
+       , Repositories (..)
+       , displayFullRepo
        ) where
 
+import Data.Aeson (withObject, (.:))
 import Servant (ToHttpApiData (..))
 import Text.Diff.Parse.Types (FileDeltas)
+
+import qualified Data.Text as T
 
 
 -- | Data type that represents the current pull request.
@@ -28,6 +36,42 @@ newtype Owner = Owner
 newtype Repo = Repo
     { unRepo :: Text
     } deriving newtype (Show, Eq, Hashable, ToHttpApiData)
+
+-- | Full repo name in the form: @onwer/repo@
+-- TODO: is there better name?...
+data FullRepo = FullRepo
+    { frOwner :: !Owner
+    , frRepo  :: !Repo
+    } deriving stock (Eq, Generic)
+      deriving anyclass (Hashable)
+
+displayFullRepo :: FullRepo -> Text
+displayFullRepo FullRepo{..} = unOwner frOwner <> "/" <> unRepo frRepo
+
+{- | Parser from the following endpoint:
+
+* https://developer.github.com/v3/apps/installations/#list-repositories
+-}
+instance FromJSON FullRepo where
+    parseJSON = withObject "FullRepo" $ \o -> do
+        fullName <- o .: "full_name"
+        case T.splitOn "/" fullName of
+            [Owner -> frOwner, Repo -> frRepo] -> pure FullRepo{..}
+            _ -> fail $ "Expected owner/repo but got: " <> toString fullName
+
+newtype Repositories = Repositories
+    { unRepositories :: [FullRepo]
+    }
+
+{- | Parser from the following endpoint:
+
+* https://developer.github.com/v3/apps/installations/#list-repositories
+-}
+
+instance FromJSON Repositories where
+    parseJSON = withObject "Repositories" $ \o -> do
+        repositories <- o .: "repositories"
+        pure $ Repositories repositories
 
 newtype Branch = Branch
     { unBranch :: Text

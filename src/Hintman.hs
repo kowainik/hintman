@@ -8,11 +8,12 @@ import Data.X509.File (readKeyFile)
 import Network.Wai.Handler.Warp (run)
 import System.Environment (lookupEnv)
 
-import Hintman.App (Env (..))
+import Hintman.App (Env (..), runAppLogIO_)
 import Hintman.Cli (CliArguments (..), cliArguments)
 import Hintman.Config (loadFileConfig)
 import Hintman.Core.Key (gitHubKey)
 import Hintman.Core.Token (AppInfo (..))
+import Hintman.Effect.TokenStorage (initialiseInstallationIds)
 import Hintman.Webhook (hintmanApp)
 
 import qualified Data.ByteString.Char8 as C8
@@ -50,4 +51,10 @@ runOn ctx = do
     envTokenCache <- newIORef mempty
     let envLogAction = richMessageAction
 
-    run (cliArgumentsPort ctx) (hintmanApp Env{..})
+    let env = Env{..}
+
+    -- this function changes mutable variable 'envTokenCache'
+    -- it's not dangerous but might be surprising
+    runAppLogIO_ env initialiseInstallationIds
+
+    run (cliArgumentsPort ctx) (hintmanApp env)

@@ -18,10 +18,10 @@ import Servant.Server.Generic (AsServerT)
 
 import Hintman.App (App, AppEnv, Env (..), Has, WithError, runAppAsHandler)
 import Hintman.Core.Key (GitHubKey)
-import Hintman.Core.PrInfo (Owner (..), Repo (..))
+import Hintman.Core.PrInfo (FullRepo (..), Owner (..), Repo (..), displayFullRepo)
 import Hintman.Core.Token (AppInfo, InstallationId (..), InstallationToken (..))
 import Hintman.Effect.TokenStorage (MonadTokenStorage (..))
-import Hintman.Installation (createInstallationToken)
+import Hintman.Installation (createInstallationToken, mkJwtToken)
 
 
 data HintmanSite route = HintmanSite
@@ -63,12 +63,14 @@ appInstalledHook
     -> m ()
 appInstalledHook _ ((), ev) = do
     log D "'InstallationEvent' triggered"
-    let installationId = InstallationId $ show $ whInstallationId $ evInstallationInfo ev
+    let installationId = InstallationId $ whInstallationId $ evInstallationInfo ev
     let owner = whInstallationAccount $ evInstallationInfo ev
+
+    jwtToken <- mkJwtToken
     case evInstallationAction ev of
         InstallationCreatedAction -> do
             log D "InstallationCreatedAction"
-            token <- createInstallationToken installationId
+            token <- createInstallationToken jwtToken installationId
             for_ (evInstallationRepos ev) (cacheRepo token owner)
         InstallationDeletedAction -> log I "App deleted" -- TODO: delete all
         InstallationActionOther _ -> error "Unknown action"  -- TODO: proper error with logging
@@ -80,12 +82,14 @@ repoInstalledHook
     -> m ()
 repoInstalledHook _ ((), ev) = do
     log D "'InstallationRepositoriesEvent' triggered"
-    let installationId = InstallationId $ show $ whInstallationId $ evInstallationRepoInfo ev
+    let installationId = InstallationId $ whInstallationId $ evInstallationRepoInfo ev
     let owner = whInstallationAccount $ evInstallationRepoInfo ev
+
+    jwtToken <- mkJwtToken
     case evInstallationRepoAction ev of
         InstallationRepoCreatedAction -> do
             log D "InstallationRepoCreatedAction"
-            token <- createInstallationToken installationId
+            token <- createInstallationToken jwtToken installationId
             for_ (evInstallationReposAdd ev) (cacheRepo token owner)
         InstallationRepoRemovedAction -> log I "Repo deleted"
         InstallationRepoActionOther _ -> error "Unknown action"  -- TODO: proper error with logging
@@ -97,10 +101,11 @@ cacheRepo
     -> HookRepositorySimple
     -> m ()
 cacheRepo token hookUser hookRepo = do
-    let owner = Owner $ whUserLogin hookUser
-    let repo  = Repo $ whSimplRepoName hookRepo
-    log D $ "Inserting token for " <> show owner <> "/" <> show repo
-    insertToken owner repo token
+    let frOwner  = Owner $ whUserLogin hookUser
+    let frRepo   = Repo $ whSimplRepoName hookRepo
+    let fullRepo = FullRepo{..}
+    log D $ "Inserting token for: " <> displayFullRepo fullRepo
+    insertToken fullRepo token
 
 server :: AppEnv -> Server HintmanAPI
 server env@Env{..} = hoistServerWithContext
