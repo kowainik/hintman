@@ -18,7 +18,7 @@ import Servant.Server.Generic (AsServerT)
 
 import Hintman.App (App, AppEnv, Env (..), Has, WithError, runAppAsHandler)
 import Hintman.Core.Key (GitHubKey)
-import Hintman.Core.PrInfo (FullRepo (..), Owner (..), Repo (..), displayFullRepo)
+import Hintman.Core.PrInfo (Owner (..))
 import Hintman.Core.Token (AppInfo, InstallationId (..), InstallationToken (..))
 import Hintman.Effect.TokenStorage (MonadTokenStorage (..))
 import Hintman.Installation (createInstallationToken, mkJwtToken)
@@ -62,7 +62,7 @@ appInstalledHook
     -> ((), InstallationEvent)
     -> m ()
 appInstalledHook _ ((), ev) = do
-    log D "'InstallationEvent' triggered"
+    log I "'InstallationEvent' triggered"
     let installationId = InstallationId $ whInstallationId $ evInstallationInfo ev
     let owner = whInstallationAccount $ evInstallationInfo ev
 
@@ -81,7 +81,7 @@ repoInstalledHook
     -> ((), InstallationRepositoriesEvent)
     -> m ()
 repoInstalledHook _ ((), ev) = do
-    log D "'InstallationRepositoriesEvent' triggered"
+    log I "'InstallationRepositoriesEvent' triggered"
     let installationId = InstallationId $ whInstallationId $ evInstallationRepoInfo ev
     let owner = whInstallationAccount $ evInstallationRepoInfo ev
 
@@ -100,12 +100,10 @@ cacheRepo
     -> HookUser
     -> HookRepositorySimple
     -> m ()
-cacheRepo token hookUser hookRepo = do
-    let frOwner  = Owner $ whUserLogin hookUser
-    let frRepo   = Repo $ whSimplRepoName hookRepo
-    let fullRepo = FullRepo{..}
-    log D $ "Inserting token for: " <> displayFullRepo fullRepo
-    insertToken fullRepo token
+cacheRepo token hookUser _hookRepo = do
+    let owner  = Owner $ whUserLogin hookUser
+    log D $ "Inserting token for: " <> unOwner owner
+    insertToken owner token
 
 server :: AppEnv -> Server HintmanAPI
 server env@Env{..} = hoistServerWithContext

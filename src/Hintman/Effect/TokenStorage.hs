@@ -14,7 +14,7 @@ import UnliftIO (MonadUnliftIO)
 import UnliftIO.MVar (modifyMVar)
 
 import Hintman.App (App, AppErrorType (..), Has, TokenCache, WithError, grab, throwError)
-import Hintman.Core.PrInfo (FullRepo, Repositories (..), displayFullRepo)
+import Hintman.Core.PrInfo (FullRepo (..), Owner (..), Repositories (..), displayFullRepo)
 import Hintman.Core.Token (AppInfo, InstallationId, InstallationToken (..))
 import Hintman.Installation (createInstallationToken, mkInstallationsRequest, mkJwtToken,
                              mkRepositoriesRequest, performRequest, renewToken)
@@ -24,9 +24,9 @@ import qualified Data.Text as T
 
 
 class Monad m => MonadTokenStorage m where
-    insertToken :: FullRepo -> InstallationToken -> m ()
-    deleteToken :: FullRepo -> m ()
-    lookupToken :: FullRepo -> m (Maybe (MVar InstallationToken))
+    insertToken :: Owner -> InstallationToken -> m ()
+    deleteToken :: Owner -> m ()
+    lookupToken :: Owner -> m (Maybe (MVar InstallationToken))
 
 instance MonadTokenStorage App where
     insertToken = insertTokenImpl
@@ -44,11 +44,11 @@ acquireInstallationToken
        , WithError m
        , WithLog env m
        )
-    => FullRepo
+    => Owner
     -> m InstallationToken
-acquireInstallationToken fullRepo = lookupToken fullRepo >>= \case
+acquireInstallationToken owner = lookupToken owner >>= \case
     Nothing -> throwError $ ServerError $
-        "Can't find token for: " <> displayFullRepo fullRepo
+        "Can't find token for: " <> unOwner owner
     Just tokenVar -> modifyMVar tokenVar $ \oldToken -> do
         newToken <- renewToken oldToken
         pure (newToken, newToken)
@@ -83,7 +83,7 @@ initialiseInstallationIds = do
         log D $ "This ID is for the following repos: "
             <> T.intercalate ", " (map displayFullRepo repositories)
 
-        for_ repositories $ \fullRepo -> insertToken fullRepo installationToken
+        for_ repositories $ \FullRepo{..} -> insertToken frOwner installationToken
 
 ----------------------------------------------------------------------------
 -- Internals
@@ -91,28 +91,28 @@ initialiseInstallationIds = do
 
 insertTokenImpl
     :: (MonadReader env m, Has TokenCache env, MonadIO m)
-    => FullRepo
+    => Owner
     -> InstallationToken
     -> m ()
-insertTokenImpl fullRepo token = do
+insertTokenImpl owner token = do
     tokenVar <- newMVar token
     ref <- grab @TokenCache
     atomicModifyIORef' ref $
-        \cache -> (HM.insert fullRepo tokenVar cache, ())
+        \cache -> (HM.insert owner tokenVar cache, ())
 
 deleteTokenImpl
     :: (MonadReader env m, Has TokenCache env, MonadIO m)
-    => FullRepo
+    => Owner
     -> m ()
-deleteTokenImpl fullRepo = do
+deleteTokenImpl owner = do
     ref <- grab @TokenCache
-    atomicModifyIORef' ref $ \cache -> (HM.delete fullRepo cache, ())
+    atomicModifyIORef' ref $ \cache -> (HM.delete owner cache, ())
 
 lookupTokenImpl
     :: (MonadReader env m, Has TokenCache env, MonadIO m)
-    => FullRepo
+    => Owner
     -> m (Maybe (MVar InstallationToken))
-lookupTokenImpl fullRepo = do
+lookupTokenImpl owner = do
     ref <- grab @TokenCache
     cache <- readIORef ref
-    pure $ HM.lookup fullRepo cache
+    pure $ HM.lookup owner cache
