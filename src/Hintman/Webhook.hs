@@ -8,8 +8,7 @@ module Hintman.Webhook
 import GitHub.Data.Webhooks.Events (InstallationEvent (..), InstallationEventAction (..),
                                     InstallationRepoEventAction (..),
                                     InstallationRepositoriesEvent (..), PullRequestEvent (..))
-import GitHub.Data.Webhooks.Payload (HookInstallation (..), HookRepositorySimple (..),
-                                     HookUser (..))
+import GitHub.Data.Webhooks.Payload (HookInstallation (..), HookUser (..))
 import Servant (Application, Context ((:.), EmptyContext), Server, hoistServerWithContext,
                 serveWithContext)
 import Servant.API.Generic ((:-), ToServantApi, toServant)
@@ -19,7 +18,7 @@ import Servant.Server.Generic (AsServerT)
 import Hintman.App (App, AppEnv, Env (..), Has, WithError, runAppAsHandler)
 import Hintman.Core.Key (GitHubKey)
 import Hintman.Core.PrInfo (Owner (..))
-import Hintman.Core.Token (AppInfo, InstallationId (..), InstallationToken (..))
+import Hintman.Core.Token (AppInfo, InstallationId (..))
 import Hintman.Effect.TokenStorage (MonadTokenStorage (..))
 import Hintman.Installation (createInstallationToken, mkJwtToken)
 
@@ -62,18 +61,19 @@ appInstalledHook
     -> ((), InstallationEvent)
     -> m ()
 appInstalledHook _ ((), ev) = do
-    log I "'InstallationEvent' triggered"
+    log D "'InstallationEvent' triggered"
     let installationId = InstallationId $ whInstallationId $ evInstallationInfo ev
-    let owner = whInstallationAccount $ evInstallationInfo ev
+    let owner = Owner $ whUserLogin $ whInstallationAccount $ evInstallationInfo ev
 
-    jwtToken <- mkJwtToken
     case evInstallationAction ev of
         InstallationCreatedAction -> do
-            log D "InstallationCreatedAction"
-            token <- createInstallationToken jwtToken installationId
-            for_ (evInstallationRepos ev) (cacheRepo token owner)
-        InstallationDeletedAction -> log I "App deleted" -- TODO: delete all
-        InstallationActionOther _ -> error "Unknown action"  -- TODO: proper error with logging
+            log I $ "Installing app for: " <> unOwner owner
+            cacheInstallation owner installationId
+        InstallationDeletedAction -> do
+            log I $ "Deleting app for: " <> unOwner owner
+            deleteToken owner
+        InstallationActionOther msg ->
+            log W $ "Other installation action: " <> msg
 
 repoInstalledHook
     :: (MonadIO m, MonadTokenStorage m, Has AppInfo env, WithError m, WithLog env m)
@@ -81,28 +81,32 @@ repoInstalledHook
     -> ((), InstallationRepositoriesEvent)
     -> m ()
 repoInstalledHook _ ((), ev) = do
-    log I "'InstallationRepositoriesEvent' triggered"
+    log D "'InstallationRepositoriesEvent' triggered"
     let installationId = InstallationId $ whInstallationId $ evInstallationRepoInfo ev
-    let owner = whInstallationAccount $ evInstallationRepoInfo ev
+    let owner = Owner $ whUserLogin $ whInstallationAccount $ evInstallationRepoInfo ev
 
-    jwtToken <- mkJwtToken
     case evInstallationRepoAction ev of
         InstallationRepoCreatedAction -> do
-            log D "InstallationRepoCreatedAction"
-            token <- createInstallationToken jwtToken installationId
-            for_ (evInstallationReposAdd ev) (cacheRepo token owner)
-        InstallationRepoRemovedAction -> log I "Repo deleted"
-        InstallationRepoActionOther _ -> error "Unknown action"  -- TODO: proper error with logging
+            log D $ "Installing app for repos and user: " <> unOwner owner
+            cacheInstallation owner installationId
+        InstallationRepoRemovedAction ->
+            log I $ "Some repo(s) deleted for user: " <> unOwner owner
+        InstallationRepoActionOther msg ->
+            log W $ "Other repo installation action: " <> msg
 
-cacheRepo
-    :: (MonadTokenStorage m, WithLog env m)
-    => InstallationToken
-    -> HookUser
-    -> HookRepositorySimple
+cacheInstallation
+    :: ( MonadTokenStorage m
+       , MonadIO m
+       , Has AppInfo env
+       , WithError m
+       , WithLog env m
+       )
+    => Owner
+    -> InstallationId
     -> m ()
-cacheRepo token hookUser _hookRepo = do
-    let owner  = Owner $ whUserLogin hookUser
-    log D $ "Inserting token for: " <> unOwner owner
+cacheInstallation owner installationId = do
+    jwtToken <- mkJwtToken
+    token <- createInstallationToken jwtToken installationId
     insertToken owner token
 
 server :: AppEnv -> Server HintmanAPI
