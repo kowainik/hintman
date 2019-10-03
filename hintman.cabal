@@ -93,6 +93,7 @@ library
                      , filepath ^>= 1.4
                      , github ^>= 0.22
                      , github-webhooks ^>= 0.10.1
+                     , haskell-src-exts
                      , hlint ^>= 2.2.2
                      , http-client ^>= 0.6.4
                      , http-client-tls ^>= 0.3.5

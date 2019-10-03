@@ -4,9 +4,13 @@ in PRs.
 
 module Hintman.HLint
        ( runHLint
+
+         -- * Internals
        , createComment
+       , createCommentText
        ) where
 
+import Language.Haskell.Exts.SrcLoc (srcSpanEnd, srcSpanStart)
 import Language.Haskell.HLint4 (Idea (..), Note (..), Severity (..), applyHints, autoSettings,
                                 parseModuleEx)
 import Network.HTTP.Client (Response (..), httpLbs)
@@ -17,6 +21,7 @@ import System.FilePath (takeExtension)
 import Text.Diff.Parse.Types (FileDelta (..), FileDeltas, FileStatus (..))
 
 import Hintman.Core.PrInfo (Branch (..), Owner (..), PrInfo (..), Repo (..))
+import Hintman.Core.Review (Comment (..))
 
 import qualified Data.Text as T
 
@@ -30,28 +35,39 @@ For this we need:
 3. Get the content of all modified files.
 4. Run @Hlint@ tool on the content.
 5. Return the list of all 'Idea's.
+6. Create 'Comment's out of those 'Idea's.
 
 -}
-runHLint :: (MonadIO m, WithLog env m) => PrInfo -> m [Idea]
+runHLint :: (MonadIO m, WithLog env m) => PrInfo -> m [Comment]
 runHLint prInfo@PrInfo{..} = do
     let modFiles = filter ((==) ".hs" . takeExtension) $ getModifiedFiles prInfoDelta
     let getContent = downloadFile . createFileDownloadUrl prInfo
     fileContent <- traverse (traverseToSnd getContent) modFiles
-    foldMapM getFileHLintSuggestions fileContent
+    foldMapM (getFileHLintComments prInfoDelta) fileContent
 
 -- | Get all modified files in the PR.
 getModifiedFiles :: FileDeltas -> [FilePath]
 getModifiedFiles = map (toString . fileDeltaDestFile) . filter ((/=) Deleted . fileDeltaStatus)
 
-
-getFileHLintSuggestions :: (MonadIO m, WithLog env m) => (FilePath, Maybe ByteString) -> m [Idea]
-getFileHLintSuggestions (fileName, content) = case content of
+-- | Create 'Comment's out of the file content
+getFileHLintComments
+    :: (MonadIO m, WithLog env m)
+    => FileDeltas
+    -> (FilePath, Maybe ByteString)
+    -> m [Comment]
+getFileHLintComments fd (fileName, maybeContent) = case maybeContent of
     Nothing -> [] <$ log I ("Content is empty: " <> toText fileName)
-    Just (decodeUtf8 -> c) -> do
-        (flags, classify, hint) <- liftIO autoSettings
-        liftIO (parseModuleEx flags fileName (Just c)) >>= \case
-            Right m -> pure $ applyHints classify hint [m]
-            Left _err -> [] <$ log E "Hlint failed with some error" -- TODO: log err
+    Just (decodeUtf8 -> content) -> do
+        ideas <- getFileHLintSuggestions fileName content
+        pure $ mapMaybe (createComment fd fileName content) ideas
+
+
+getFileHLintSuggestions :: (MonadIO m, WithLog env m) => FilePath -> Text -> m [Idea]
+getFileHLintSuggestions fileName content = do
+    (flags, classify, hint) <- liftIO autoSettings
+    liftIO (parseModuleEx flags fileName (Just $ toString content)) >>= \case
+        Right m -> pure $ applyHints classify hint [m]
+        Left _err -> [] <$ log E "Hlint failed with some error" -- TODO: log err
 
 -- | In-memory file download from GitHub PR sources by given URL.
 downloadFile :: (MonadIO m, WithLog env m) => Text -> m (Maybe ByteString)
@@ -92,23 +108,47 @@ createFileDownloadUrl PrInfo{..} (toText -> file) = T.intercalate "/"
     , file
     ]
 
-{- | Creates the comment text from the HLint 'Idea's.
+-- | Create a 'Comment' from all necessary data.
+createComment :: FileDeltas -> FilePath -> Text -> Idea -> Maybe Comment
+createComment _fd (toText -> commentPath) content idea =
+    createCommentText content idea >>= \commentBody -> Just Comment
+        { commentPosition = 0 -- TODO: get this from line number
+        , ..
+        }
+
+{- | Creates the comment text from the HLint 'Idea's and file content.
 -}
-createComment :: Idea -> Maybe Text
-createComment Idea{..} = ideaTo >>= \to ->
-    if ideaSeverity == Ignore
-    then Nothing
-    else Just $ unlines $
+createCommentText :: Text -> Idea -> Maybe Text
+createCommentText content Idea{..} = do
+    to <- ideaTo
+    guard $ ideaSeverity /= Ignore
+    newLine <- buildWholeLine to
+    Just $ unlines $
         (if ideaHint == "" then "" else show ideaSeverity <> ": " <> toText ideaHint)
-        : mkSuggestion to
+        : mkSuggestion newLine
        ++ [ "Note: " <> n | let n = showNotes ideaNote, n /= ""]
   where
-    mkSuggestion :: String -> [Text]
+    startLine, startP, endLine, endP :: Int
+    (startLine, startP) = srcSpanStart ideaSpan
+    (endLine, endP) = srcSpanEnd ideaSpan
+
+    isOneLiner :: Bool
+    isOneLiner = startLine == endLine
+
+    mkSuggestion :: Text -> [Text]
     mkSuggestion to =
-        [ "```suggestion"
-        , toText to
+        [ "```" <> if isOneLiner then "suggestion" else ""
+        , to
         , "```"
         ]
+
+    -- Replace only relevant part of the line.
+    buildWholeLine :: String -> Maybe Text
+    buildWholeLine (toText -> replacement) =
+        if isOneLiner
+        then lines content !!? (startLine - 1) >>= \original ->
+            Just $ T.take (startP - 1) original <> replacement <> T.drop (endP - 1) original
+        else Just replacement
 
     -- This function is copy-pasted from HLint sources.
     showNotes :: [Note] -> Text
@@ -117,3 +157,14 @@ createComment Idea{..} = ideaTo >>= \to ->
         use :: Note -> Bool
         use ValidInstance{} = False -- Not important enough to tell an end user
         use _               = True
+
+-- | Safe @at@ function.
+(!!?) :: [a] -> Int -> Maybe a
+l !!? index
+    | index < 0 = Nothing
+    | otherwise = f index l
+  where
+    f :: Int -> [a] -> Maybe a
+    f 0 (x:_)  = Just x
+    f i (_:xs) = f (i - 1) xs
+    f _ []     = Nothing

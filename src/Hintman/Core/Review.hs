@@ -44,7 +44,7 @@ data Comment = Comment
 
       -- | Text of the review comment
     , commentBody     :: !Text
-    }
+    } deriving (Show, Eq)
 
 instance ToJSON Comment where
     toJSON Comment{..} = object

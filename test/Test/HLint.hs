@@ -3,9 +3,10 @@ module Test.HLint
        ) where
 
 import Colog (LoggerT, usingLoggerT)
-import Test.Hspec (Spec, describe, it, shouldBe)
+import Test.Hspec (Spec, describe, it, shouldBe, shouldSatisfy)
 
-import Hintman.HLint (createComment, runHLint)
+import Hintman.Core.Review (Comment (..))
+import Hintman.HLint (runHLint)
 
 import Test.Data (pr1, pr2)
 
@@ -16,24 +17,51 @@ hlintSpec :: Spec
 hlintSpec = describe "HLint works on opened PRs" $ do
     it "works with non-code PRs" $
         pr1 >>= runLog . runHLint >>= shouldBe []
-    it "works on code PRs" $
-        pr2 >>= runLog . runHLint >>= shouldBe [etaReduce] . map show
-    it "creates correct comment for PR 2" $
-        pr2 >>= runLog . runHLint >>= shouldBe [etaComment] . map createComment
-  where
-    etaReduce :: Text
-    etaReduce = unlines
-        [ "Main.hs:8:1: Warning: Eta reduce"
-        , "Found:"
-        , "  greet x = (++) \"Hello \" x"
-        , "Perhaps:"
-        , "  greet = (++) \"Hello \""
-        ]
+    it "creates correct eta-reduce comment for PR 2" $
+        pr2 >>= runLog . runHLint >>= (`shouldSatisfy` (etaComment `elem`))
+    it "creates correct part line comment for PR 2" $
+        pr2 >>= runLog . runHLint >>= (`shouldSatisfy` (avoidLambdaComment `elem`))
+    it "creates remove line comment for PR 2" $
+        pr2 >>= runLog . runHLint >>= (`shouldSatisfy` (removePragmaComment `elem`))
+    it "creates multiline comment for PR 2" $
+        pr2 >>= runLog . runHLint >>= (`shouldSatisfy` (multilineComment `elem`))
 
-    etaComment :: Maybe Text
-    etaComment = Just $ unlines
+  where
+    mkComment :: Text -> Comment
+    mkComment txt = Comment
+        { commentPath = "Main.hs"
+        , commentPosition = 0
+        , commentBody = txt
+        }
+
+    etaComment :: Comment
+    etaComment = mkComment $ unlines
         [ "Warning: Eta reduce"
         , "```suggestion"
         , "greet = (++) \"Hello \""
+        , "```"
+        ]
+
+    avoidLambdaComment :: Comment
+    avoidLambdaComment = mkComment $ unlines
+        [ "Warning: Avoid lambda"
+        , "```suggestion"
+        , "foo a b = (succ) a + b"
+        , "```"
+        ]
+
+    removePragmaComment :: Comment
+    removePragmaComment = mkComment $ unlines
+        [ "Warning: Unused LANGUAGE pragma"
+        , "```suggestion"
+        , ""
+        , "```"
+        ]
+
+    multilineComment :: Comment
+    multilineComment = mkComment $ unlines
+        [ "Warning: Eta reduce"
+        , "```"
+        , "multiline = putStrLn"
         , "```"
         ]
