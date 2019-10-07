@@ -52,10 +52,13 @@ runOn cli = do
 
     -- get private key
     pkValEnv <- lookupEnv "PK_VAL"
-    pk <- case pkValEnv of
+    pk <- case pkValEnv >>= readMaybe @String of
         Just pkVal -> do
             putTextLn "Using value of PK_VAL..."
-            [PrivKeyRSA pk] <- pure $ readKeyFileFromMemory $ encodeUtf8 pkVal
+            putStrLn pkVal
+            let privKey = readKeyFileFromMemory $ encodeUtf8 pkVal
+            print privKey
+            [PrivKeyRSA pk] <- pure privKey
             pure pk
         Nothing -> do
             putTextLn "Using value of PK_PATH..."
