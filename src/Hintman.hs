@@ -1,3 +1,5 @@
+{-# LANGUAGE BangPatterns #-}
+
 module Hintman
        ( runHintman
        ) where
@@ -5,6 +7,7 @@ module Hintman
 import Colog (richMessageAction)
 import Data.X509 (PrivKey (PrivKeyRSA))
 import Data.X509.File (readKeyFile)
+import Data.X509.Memory (readKeyFileFromMemory)
 import Network.Wai.Handler.Warp (run)
 import System.Environment (lookupEnv)
 
@@ -31,18 +34,35 @@ printLoggingStatus ctx
 
 -- | Runs the program with a given context
 runOn :: CliArguments -> IO ()
-runOn ctx = do
-    printLoggingStatus ctx
-    let siteString = "https://localhost:" <> show (cliArgumentsPort ctx)
-    putTextLn ("Starting hintman site at " <> siteString)
+runOn cli = do
+    printLoggingStatus cli
+
+    -- get port
+    portEnv <- lookupEnv "PORT"
+    let port = fromMaybe 8080 $ (portEnv >>= readMaybe) <|> cliArgumentsPort cli
+
+    let siteString = "https://localhost:" <> show port
+    putTextLn ("Starting hintman site at: " <> siteString)
 
     envConfig <- loadFileConfig "hintman-config.toml"
 
-    key <- maybe (error "KEY not found") C8.pack <$> lookupEnv "KEY"
+    -- get webhook secret
+    !key <- maybe (error "KEY not found") C8.pack <$> lookupEnv "KEY"
     let envGitHubKey = gitHubKey $ pure key
 
-    pkPath <- fromMaybe (error "PK_PATH not found") <$> lookupEnv "PK_PATH"
-    [PrivKeyRSA pk] <- readKeyFile pkPath
+    -- get private key
+    pkValEnv <- lookupEnv "PK_VAL"
+    pk <- case pkValEnv of
+        Just pkVal -> do
+            putTextLn "Using value of PK_VAL..."
+            [PrivKeyRSA pk] <- pure $ readKeyFileFromMemory $ encodeUtf8 pkVal
+            pure pk
+        Nothing -> do
+            putTextLn "Using value of PK_PATH..."
+            pkPath <- fromMaybe (error "PK_PATH not found") <$> lookupEnv "PK_PATH"
+            [PrivKeyRSA pk] <- readKeyFile pkPath
+            pure pk
+
     let envAppInfo = AppInfo
             { appInfoId = 20170
             , appInfoPrivateKey = pk
@@ -57,4 +77,4 @@ runOn ctx = do
     -- it's not dangerous but might be surprising
     runAppLogIO_ env initialiseInstallationIds
 
-    run (cliArgumentsPort ctx) (hintmanApp env)
+    run port (hintmanApp env)

@@ -10,7 +10,7 @@ import Options.Applicative (Parser, auto, execParser, fullDesc, help, helper, in
 -- | Represents the applicaiton settings
 data CliArguments = CliArguments
     { cliArgumentsLogging :: Bool
-    , cliArgumentsPort    :: Int
+    , cliArgumentsPort    :: Maybe Int
     }
 
 parseCliArguments :: Parser CliArguments
@@ -23,11 +23,11 @@ parseCliArguments = CliArguments
         <> short 'l'
         <> help "Enable logging"
         )
-    parsePort = option auto
+    parsePort = optional $ option auto
         (  long "port"
         <> short 'p'
-        <> metavar "PORTNUMBER"
-        <> value 3000
+        <> metavar "PORT_NUMBER"
+        <> value 8080
         <> showDefault
         <> help "Configure the port to run on"
         )
