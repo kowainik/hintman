@@ -27,15 +27,15 @@ hlintSpec = describe "HLint works on opened PRs" $ do
         pr2 >>= runLog . runHLint >>= (`shouldSatisfy` (multilineComment `elem`))
 
   where
-    mkComment :: Text -> Comment
-    mkComment txt = Comment
+    mkComment :: Int -> Text -> Comment
+    mkComment pos txt = Comment
         { commentPath = "Main.hs"
-        , commentPosition = 0
+        , commentPosition = pos
         , commentBody = txt
         }
 
     etaComment :: Comment
-    etaComment = mkComment $ unlines
+    etaComment = mkComment 9 $ unlines
         [ "Warning: Eta reduce"
         , "```suggestion"
         , "greet = (++) \"Hello \""
@@ -43,7 +43,7 @@ hlintSpec = describe "HLint works on opened PRs" $ do
         ]
 
     avoidLambdaComment :: Comment
-    avoidLambdaComment = mkComment $ unlines
+    avoidLambdaComment = mkComment 12 $ unlines
         [ "Warning: Avoid lambda"
         , "```suggestion"
         , "foo a b = (succ) a + b"
@@ -51,7 +51,7 @@ hlintSpec = describe "HLint works on opened PRs" $ do
         ]
 
     removePragmaComment :: Comment
-    removePragmaComment = mkComment $ unlines
+    removePragmaComment = mkComment 0 $ unlines
         [ "Warning: Unused LANGUAGE pragma"
         , "```suggestion"
         , ""
@@ -59,7 +59,7 @@ hlintSpec = describe "HLint works on opened PRs" $ do
         ]
 
     multilineComment :: Comment
-    multilineComment = mkComment $ unlines
+    multilineComment = mkComment 17 $ unlines
         [ "Warning: Eta reduce"
         , "```"
         , "multiline = putStrLn"
