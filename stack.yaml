@@ -6,6 +6,7 @@ extra-deps:
   - servant-github-webhook-0.4.2.0
 
   - github-0.22
+  - github-webhooks-0.11.0
   - binary-instances-1    # for github
 
   - hlint-2.2.2

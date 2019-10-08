@@ -92,7 +92,7 @@ library
                      , diff-parse ^>= 0.2.1
                      , filepath ^>= 1.4
                      , github ^>= 0.22
-                     , github-webhooks ^>= 0.10.1
+                     , github-webhooks ^>= 0.11.0
                      , haskell-src-exts
                      , hlint ^>= 2.2.2
                      , http-client ^>= 0.6.4
