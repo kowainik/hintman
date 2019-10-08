@@ -25,7 +25,14 @@ hlintSpec = describe "HLint works on opened PRs" $ do
         pr2 >>= runLog . runHLint >>= (`shouldSatisfy` (removePragmaComment `elem`))
     it "creates multiline comment for PR 2" $
         pr2 >>= runLog . runHLint >>= (`shouldSatisfy` (multilineComment `elem`))
-
+    it "creates redundant parens comment for PR 2" $
+        pr2 >>= runLog . runHLint >>= (`shouldSatisfy` (redundantParenComment `elem`))
+    it "creates redundant do comment for PR 2" $
+        pr2 >>= runLog . runHLint >>= (`shouldSatisfy` (redundantDoComment `elem`))
+    it "creates redundant $ comment for PR 2" $
+        pr2 >>= runLog . runHLint >>= (`shouldSatisfy` (redundantDollarComment `elem`))
+    it "creates <$> over fmap comment for PR 2" $
+        pr2 >>= runLog . runHLint >>= (`shouldSatisfy` (fmapComment `elem`))
   where
     mkComment :: Int -> Text -> Comment
     mkComment pos txt = Comment
@@ -63,5 +70,37 @@ hlintSpec = describe "HLint works on opened PRs" $ do
         [ "Warning: Eta reduce"
         , "```"
         , "multiline = putStrLn"
+        , "```"
+        ]
+
+    redundantParenComment :: Comment
+    redundantParenComment = mkComment 20 $ unlines
+        [ "Warning: Redundant bracket"
+        , "```suggestion"
+        , "redundantParen x = succ $ x - 1"
+        , "```"
+        ]
+
+    redundantDoComment :: Comment
+    redundantDoComment = mkComment 23 $ unlines
+        [ "Warning: Redundant do"
+        , "```suggestion"
+        , "redundantDo = putStrLn \"Hello\""
+        , "```"
+        ]
+
+    redundantDollarComment :: Comment
+    redundantDollarComment = mkComment 26 $ unlines
+        [ "Suggestion: Redundant $"
+        , "```suggestion"
+        , "redundantDollar = putStrLn \"<- What is this dollar about?\""
+        , "```"
+        ]
+
+    fmapComment :: Comment
+    fmapComment = mkComment 29 $ unlines
+        [ "Suggestion: Use <$>"
+        , "```suggestion"
+        , "fmapWarn f = f Control.Applicative.<$> foo bar"
         , "```"
         ]
