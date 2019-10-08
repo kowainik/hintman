@@ -10,7 +10,6 @@ module Hintman.Effect.TokenStorage
        , initialiseInstallationIds
        ) where
 
-import UnliftIO (MonadUnliftIO)
 import UnliftIO.MVar (modifyMVar)
 
 import Hintman.App (App, AppErrorType (..), Has, TokenCache, WithError, grab, throwError)

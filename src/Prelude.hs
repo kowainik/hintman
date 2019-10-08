@@ -8,6 +8,7 @@ module Prelude
        , module Json
        , module Time
        , module Web
+       , module UnliftIO
 
        , WithLog
        ) where
@@ -20,6 +21,7 @@ import Colog (pattern D, pattern E, pattern I, LogAction (..), Message, Severity
 import Data.Aeson as Json (FromJSON (parseJSON), ToJSON (toJSON))
 import Data.Time.Clock as Time (UTCTime)
 import Servant.API as Web ((:>), Capture, Get, JSON, NoContent (NoContent), Post, ReqBody)
+import UnliftIO (MonadUnliftIO)
 
 -- Internal
 import qualified Colog (WithLog)

@@ -21,7 +21,7 @@ import System.FilePath (takeExtension)
 import Text.Diff.Parse.Types (Annotation (..), Content (..), FileDelta (..), FileDeltas,
                               FileStatus (..), Hunk (..), Line (..), Range (..))
 
-import Hintman.Core.PrInfo (Branch (..), Owner (..), PrInfo (..), Repo (..))
+import Hintman.Core.PrInfo (Owner (..), PrInfo (..), Repo (..), Sha (..))
 import Hintman.Core.Review (Comment (..))
 
 import qualified Data.Text as T
@@ -100,7 +100,7 @@ downloadFile url = do
 form:
 
 @
-https://raw.githubusercontent.com/owner/repo/branch/FILE_NAME
+https://raw.githubusercontent.com/owner/repo/sha/FILE_NAME
 @
 -}
 createFileDownloadUrl
@@ -111,7 +111,7 @@ createFileDownloadUrl PrInfo{..} (toText -> file) = T.intercalate "/"
     [ "https://raw.githubusercontent.com"
     , unOwner prInfoOwner
     , unRepo prInfoRepo
-    , unBranch prInfoBranch
+    , unSha prInfoHead
     , file
     ]
 
@@ -220,17 +220,16 @@ getTargetCommentPosition :: FileDelta -> Int -> Maybe Int
 getTargetCommentPosition FileDelta{..} commentPos = case fileDeltaContent of
     Binary   -> Nothing
     Hunks hs -> goHunks hs
-
   where
     -- Find the position number i the hunk.
     -- Stops on the first satisfying.
     goHunks :: [Hunk] -> Maybe Int
     goHunks [] = Nothing
     goHunks (Hunk{..}:hs) = case inRange hunkDestRange of
-        Just diffLine ->hunkLines !!? diffLine >>= \line ->
+        Just diffLine -> hunkLines !!? diffLine >>= \line ->
             -- Only 'Added' lines.
             if lineAnnotation line == Added
-            then Just diffLine
+            then Just (diffLine + 1)
             else Nothing
         Nothing -> goHunks hs
       where

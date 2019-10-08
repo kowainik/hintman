@@ -44,7 +44,7 @@ hlintSpec = describe "HLint works on opened PRs" $ do
         }
 
     etaComment :: Comment
-    etaComment = mkComment 9 $ unlines
+    etaComment = mkComment 10 $ unlines
         [ "Warning: Eta reduce"
         , "```suggestion"
         , "greet = (++) \"Hello \""
@@ -52,7 +52,7 @@ hlintSpec = describe "HLint works on opened PRs" $ do
         ]
 
     avoidLambdaComment :: Comment
-    avoidLambdaComment = mkComment 12 $ unlines
+    avoidLambdaComment = mkComment 13 $ unlines
         [ "Warning: Avoid lambda"
         , "```suggestion"
         , "foo a b = (succ) a + b"
@@ -60,7 +60,7 @@ hlintSpec = describe "HLint works on opened PRs" $ do
         ]
 
     removePragmaComment :: Comment
-    removePragmaComment = mkComment 0 $ unlines
+    removePragmaComment = mkComment 1 $ unlines
         [ "Warning: Unused LANGUAGE pragma"
         , "```suggestion"
         , ""
@@ -68,7 +68,7 @@ hlintSpec = describe "HLint works on opened PRs" $ do
         ]
 
     multilineComment :: Comment
-    multilineComment = mkComment 17 $ unlines
+    multilineComment = mkComment 18 $ unlines
         [ "Warning: Eta reduce"
         , "```"
         , "multiline = putStrLn"
@@ -76,7 +76,7 @@ hlintSpec = describe "HLint works on opened PRs" $ do
         ]
 
     redundantParenComment :: Comment
-    redundantParenComment = mkComment 20 $ unlines
+    redundantParenComment = mkComment 21 $ unlines
         [ "Warning: Redundant bracket"
         , "```suggestion"
         , "redundantParen x = succ $ x - 1"
@@ -84,7 +84,7 @@ hlintSpec = describe "HLint works on opened PRs" $ do
         ]
 
     redundantDoComment :: Comment
-    redundantDoComment = mkComment 23 $ unlines
+    redundantDoComment = mkComment 24 $ unlines
         [ "Warning: Redundant do"
         , "```suggestion"
         , "redundantDo = putStrLn \"Hello\""
@@ -92,7 +92,7 @@ hlintSpec = describe "HLint works on opened PRs" $ do
         ]
 
     redundantDollarComment :: Comment
-    redundantDollarComment = mkComment 26 $ unlines
+    redundantDollarComment = mkComment 27 $ unlines
         [ "Suggestion: Redundant $"
         , "```suggestion"
         , "redundantDollar = putStrLn \"<- What is this dollar about?\""
@@ -100,7 +100,7 @@ hlintSpec = describe "HLint works on opened PRs" $ do
         ]
 
     fmapComment :: Comment
-    fmapComment = mkComment 29 $ unlines
+    fmapComment = mkComment 30 $ unlines
         [ "Suggestion: Use <$>"
         , "```suggestion"
         , "fmapWarn f = f Control.Applicative.<$> foo bar"

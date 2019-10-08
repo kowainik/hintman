@@ -17,7 +17,6 @@ import Control.Exception (catch, throwIO, try)
 import Control.Monad.Except (MonadError (..), liftEither)
 import Relude.Extra.Bifunctor (firstF)
 import Servant (Handler (..))
-import UnliftIO (MonadUnliftIO)
 
 import Hintman.App.Env (Env)
 import Hintman.App.Error (AppError, AppException (..), toHttpError)

@@ -4,7 +4,7 @@ module Hintman.Core.PrInfo
        ( PrInfo (..)
        , Owner (..)
        , Repo (..)
-       , Branch (..)
+       , Sha (..)
        , PrNumber (..)
 
          -- * Helper types for JSON interaction
@@ -24,7 +24,7 @@ import qualified Data.Text as T
 data PrInfo = PrInfo
     { prInfoOwner  :: !Owner
     , prInfoRepo   :: !Repo
-    , prInfoBranch :: !Branch
+    , prInfoHead   :: !Sha  -- ^ Sha of the HEAD, instead of branch name
     , prInfoNumber :: !PrNumber
     , prInfoDelta  :: !FileDeltas
     }
@@ -73,8 +73,9 @@ instance FromJSON Repositories where
         repositories <- o .: "repositories"
         pure $ Repositories repositories
 
-newtype Branch = Branch
-    { unBranch :: Text
+-- | Commit hash.
+newtype Sha = Sha
+    { unSha :: Text
     }
 
 newtype PrNumber = PrNumber

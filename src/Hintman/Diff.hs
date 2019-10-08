@@ -38,8 +38,13 @@ getPullRequestDiffClient = client (Proxy @GetPullRequestDiffApi)
 
 {- | Return parsed result of the PR diff.
 -}
-fetchGitHubDiff :: Owner -> Repo -> PrNumber -> IO (Either String FileDeltas)
-fetchGitHubDiff owner repo prNum = do
+fetchGitHubDiff
+    :: MonadIO m
+    => Owner
+    -> Repo
+    -> PrNumber
+    -> m (Either String FileDeltas)
+fetchGitHubDiff owner repo prNum = liftIO $ do
     manager <- newTlsManager
 
     res <- runClientM

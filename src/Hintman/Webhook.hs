@@ -7,8 +7,11 @@ module Hintman.Webhook
 
 import GitHub.Data.Webhooks.Events (InstallationEvent (..), InstallationEventAction (..),
                                     InstallationRepoEventAction (..),
-                                    InstallationRepositoriesEvent (..), PullRequestEvent (..))
-import GitHub.Data.Webhooks.Payload (HookInstallation (..), HookUser (..))
+                                    InstallationRepositoriesEvent (..), PullRequestEvent (..),
+                                    PullRequestEventAction (..))
+import GitHub.Data.Webhooks.Payload (HookInstallation (..), HookPullRequest (..),
+                                     HookRepository (..), HookSimpleUser (..), HookUser (..),
+                                     PullRequestTarget (..))
 import Servant (Application, Context ((:.), EmptyContext), Server, hoistServerWithContext,
                 serveWithContext)
 import Servant.API.Generic ((:-), ToServantApi, toServant)
@@ -16,10 +19,13 @@ import Servant.GitHub.Webhook (GitHubEvent, GitHubSignedReqBody, RepoWebhookEven
 import Servant.Server.Generic (AsServerT)
 
 import Hintman.App (App, AppEnv, Env (..), Has, WithError, runAppAsHandler)
+import Hintman.Comment (submitReview)
 import Hintman.Core.Key (GitHubKey)
-import Hintman.Core.PrInfo (Owner (..))
-import Hintman.Core.Token (AppInfo, InstallationId (..))
-import Hintman.Effect.TokenStorage (MonadTokenStorage (..))
+import Hintman.Core.PrInfo (Owner (..), PrInfo (..), PrNumber (..), Repo (..), Sha (..))
+import Hintman.Core.Token (AppInfo, InstallationId (..), InstallationToken (..))
+import Hintman.Diff (fetchGitHubDiff)
+import Hintman.Effect.TokenStorage (MonadTokenStorage (..), acquireInstallationToken)
+import Hintman.HLint (runHLint)
 import Hintman.Installation (createInstallationToken, mkJwtToken)
 
 
@@ -52,8 +58,39 @@ hintmanServer = HintmanSite
     , hintmanInstallRepoRoute = repoInstalledHook
     }
 
-issueCommentHook :: MonadIO m => RepoWebhookEvent -> ((), PullRequestEvent) -> m ()
-issueCommentHook _ ev = print $ evPullReqPayload $ snd ev
+issueCommentHook
+    :: forall env m .
+       ( MonadTokenStorage m
+       , MonadUnliftIO m
+       , WithError m
+       , WithLog env m
+       , Has AppInfo env
+       )
+    => RepoWebhookEvent
+    -> ((), PullRequestEvent)
+    -> m ()
+issueCommentHook _ ((), ev) = case evPullReqAction ev of
+    PullRequestOpenedAction -> hintmanAction
+    _                       -> pass
+  where
+    hintmanAction :: m ()
+    hintmanAction = do
+        let repo = evPullReqRepo ev
+        let prInfoOwner = Owner $ getRepoOwner $ whRepoOwner repo
+        let prInfoRepo = Repo $ whRepoName repo
+        let prInfoHead = Sha $ whPullReqTargetSha $ whPullReqHead $ evPullReqPayload ev
+        let prInfoNumber = PrNumber $ evPullReqNumber ev
+
+        fetchGitHubDiff prInfoOwner prInfoRepo prInfoNumber >>= \case
+            Left err -> log E $ "Failed to fetch PR deltas: " <> toText err
+            Right prInfoDelta -> do
+                let prInfo = PrInfo{..}
+                comments <- runHLint prInfo
+                token <- itToken <$> acquireInstallationToken prInfoOwner
+                submitReview token prInfo comments
+
+    getRepoOwner :: Either HookSimpleUser HookUser -> Text
+    getRepoOwner = either whSimplUserName whUserLogin
 
 appInstalledHook
     :: (MonadIO m, MonadTokenStorage m, Has AppInfo env, WithError m, WithLog env m)
