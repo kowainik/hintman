@@ -8,7 +8,7 @@ import Test.Hspec (Spec, describe, it, shouldBe, shouldSatisfy)
 import Hintman.Core.Review (Comment (..))
 import Hintman.HLint (runHLint)
 
-import Test.Data (pr1, pr2)
+import Test.Data (pr1, pr2, pr3)
 
 runLog :: LoggerT Message IO a -> IO a
 runLog = usingLoggerT mempty
@@ -17,6 +17,8 @@ hlintSpec :: Spec
 hlintSpec = describe "HLint works on opened PRs" $ do
     it "works with non-code PRs" $
         pr1 >>= runLog . runHLint >>= shouldBe []
+    it "ignores parse errors" $
+        pr3 >>= runLog . runHLint >>= shouldBe []
     it "creates correct eta-reduce comment for PR 2" $
         pr2 >>= runLog . runHLint >>= (`shouldSatisfy` (etaComment `elem`))
     it "creates correct part line comment for PR 2" $
