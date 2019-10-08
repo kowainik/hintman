@@ -10,6 +10,7 @@ module Hintman.Effect.TokenStorage
        , initialiseInstallationIds
        ) where
 
+import Network.HTTP.Client (Manager)
 import UnliftIO (MonadUnliftIO)
 import UnliftIO.MVar (modifyMVar)
 
@@ -41,6 +42,7 @@ acquireInstallationToken
     :: ( MonadUnliftIO m
        , MonadTokenStorage m
        , Has AppInfo env
+       , Has Manager env
        , WithError m
        , WithLog env m
        )
@@ -66,6 +68,7 @@ initialiseInstallationIds
        , WithError m
        , WithLog env m
        , Has AppInfo env
+       , Has Manager env
        )
     => m ()
 initialiseInstallationIds = do

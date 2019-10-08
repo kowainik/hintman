@@ -6,6 +6,7 @@ module Prelude
        ( module Relude
        , module Colog
        , module Json
+       , module Network
        , module Time
        , module Web
 
@@ -19,6 +20,7 @@ import Colog (pattern D, pattern E, pattern I, LogAction (..), Message, Severity
               log)
 import Data.Aeson as Json (FromJSON (parseJSON), ToJSON (toJSON))
 import Data.Time.Clock as Time (UTCTime)
+import Network.HTTP.Client as Network (Manager)
 import Servant.API as Web ((:>), Capture, Get, JSON, NoContent (NoContent), Post, ReqBody)
 
 -- Internal

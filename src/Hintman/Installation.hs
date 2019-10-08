@@ -20,7 +20,6 @@ import Data.Aeson (decode, withObject, (.:))
 import Data.Time (NominalDiffTime, diffUTCTime, getCurrentTime)
 import Data.Time.Clock.POSIX (utcTimeToPOSIXSeconds)
 import Network.HTTP.Client (Request (..), Response (..), httpLbs, parseUrlThrow)
-import Network.HTTP.Client.TLS (newTlsManager)
 import Network.HTTP.Types (Method, Status (..))
 import Web.JWT (JWTClaimsSet (..), Signer (RSAPrivateKey), encodeSigned, numericDate, stringOrURI)
 
@@ -132,7 +131,7 @@ instance FromJSON AccessToken where
 {- | Query GitHub to ask access token.
 -}
 createInstallationToken
-    :: (MonadIO m, WithError m, WithLog env m)
+    :: (MonadIO m, WithError m, WithLog env m, Has Manager env)
     => JwtToken
     -> InstallationId
     -> m InstallationToken
@@ -150,14 +149,13 @@ createInstallationToken jwtToken installationId = do
 -}
 performRequest
     :: forall a m env .
-       (FromJSON a, MonadIO m, WithError m, WithLog env m)
+       (FromJSON a, MonadIO m, WithError m, WithLog env m, Has Manager env)
     => IO Request  -- ^ Action that constructs and returns request
     -> m a         -- ^ JSON result of the request
 performRequest requestAction = do
     request <- liftIO requestAction
 
-    -- TODO: put in the context to not create each time
-    manager  <- newTlsManager
+    manager  <- grab @Manager
     response <- liftIO $ httpLbs request manager
 
     -- TODO: remove code duplication with @downloadFile@
@@ -181,7 +179,7 @@ it can live long enough or creates a new token by calling 'createAccessToken'
 function. 'InstallationToken' contains enough information to be renewed.
 -}
 renewToken
-    :: (MonadIO m, Has AppInfo env, WithError m, WithLog env m)
+    :: (MonadIO m, Has AppInfo env, WithError m, WithLog env m, Has Manager env)
     => InstallationToken
     -> m InstallationToken
 renewToken token@InstallationToken{..} = do

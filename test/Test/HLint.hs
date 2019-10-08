@@ -2,30 +2,28 @@ module Test.HLint
        ( hlintSpec
        ) where
 
-import Colog (LoggerT, usingLoggerT)
-import Test.Hspec (Spec, describe, it, shouldBe, shouldSatisfy)
+import Test.Hspec (Spec, describe, it)
 
+import Hintman.App (AppEnv)
 import Hintman.Core.Review (Comment (..))
 import Hintman.HLint (runHLint)
 
+import Test.Assert (equals, satisfies)
 import Test.Data (pr1, pr2)
 
-runLog :: LoggerT Message IO a -> IO a
-runLog = usingLoggerT mempty
 
-hlintSpec :: Spec
-hlintSpec = describe "HLint works on opened PRs" $ do
+hlintSpec :: AppEnv -> Spec
+hlintSpec env = describe "HLint works on opened PRs" $ do
     it "works with non-code PRs" $
-        pr1 >>= runLog . runHLint >>= shouldBe []
+        env & (pr1 >>= runHLint) `equals` []
     it "creates correct eta-reduce comment for PR 2" $
-        pr2 >>= runLog . runHLint >>= (`shouldSatisfy` (etaComment `elem`))
+        env & (pr2 >>= runHLint) `satisfies` (etaComment `elem`)
     it "creates correct part line comment for PR 2" $
-        pr2 >>= runLog . runHLint >>= (`shouldSatisfy` (avoidLambdaComment `elem`))
+        env & (pr2 >>= runHLint) `satisfies` (avoidLambdaComment `elem`)
     it "creates remove line comment for PR 2" $
-        pr2 >>= runLog . runHLint >>= (`shouldSatisfy` (removePragmaComment `elem`))
+        env & (pr2 >>= runHLint) `satisfies` (removePragmaComment `elem`)
     it "creates multiline comment for PR 2" $
-        pr2 >>= runLog . runHLint >>= (`shouldSatisfy` (multilineComment `elem`))
-
+        env & (pr2 >>= runHLint) `satisfies` (multilineComment `elem`)
   where
     mkComment :: Int -> Text -> Comment
     mkComment pos txt = Comment

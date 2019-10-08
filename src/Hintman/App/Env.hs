@@ -28,6 +28,8 @@ data Env m = Env
     , envAppInfo    :: !AppInfo
     , envTokenCache :: !TokenCache
     , envLogAction  :: !(LogAction m Message)
+    , envPort       :: !Int
+    , envManager    :: !Manager
     }
 
 instance HasLog (Env m) Message m where
@@ -42,6 +44,7 @@ class Has field env where
 
 instance Has AppInfo    (Env m) where obtain = envAppInfo
 instance Has TokenCache (Env m) where obtain = envTokenCache
+instance Has Manager    (Env m) where obtain = envManager
 
 grab :: forall field env m . (MonadReader env m, Has field env) => m field
 grab = asks $ obtain @field

@@ -14,13 +14,13 @@ import Language.Haskell.Exts.SrcLoc (srcSpanEnd, srcSpanStart)
 import Language.Haskell.HLint4 (Idea (..), Note (..), Severity (..), applyHints, autoSettings,
                                 parseModuleEx)
 import Network.HTTP.Client (Response (..), httpLbs)
-import Network.HTTP.Client.TLS (newTlsManager)
 import Network.HTTP.Types (Status (..))
 import Relude.Extra.Tuple (traverseToSnd)
 import System.FilePath (takeExtension)
 import Text.Diff.Parse.Types (Annotation (..), Content (..), FileDelta (..), FileDeltas,
                               FileStatus (..), Hunk (..), Line (..), Range (..))
 
+import Hintman.App (Has, grab)
 import Hintman.Core.PrInfo (Branch (..), Owner (..), PrInfo (..), Repo (..))
 import Hintman.Core.Review (Comment (..))
 
@@ -39,7 +39,10 @@ For this we need:
 6. Create 'Comment's out of those 'Idea's.
 
 -}
-runHLint :: (MonadIO m, WithLog env m) => PrInfo -> m [Comment]
+runHLint
+    :: (MonadIO m, WithLog env m, Has Manager env)
+    => PrInfo
+    -> m [Comment]
 runHLint prInfo@PrInfo{..} = do
     let modFiles = filter ((==) ".hs" . takeExtension) $ getModifiedFiles prInfoDelta
     let getContent = downloadFile . createFileDownloadUrl prInfo
@@ -77,10 +80,12 @@ getFileHLintSuggestions fileName content = do
         Left _err -> [] <$ log E "Hlint failed with some error" -- TODO: log err
 
 -- | In-memory file download from GitHub PR sources by given URL.
-downloadFile :: (MonadIO m, WithLog env m) => Text -> m (Maybe ByteString)
+downloadFile
+    :: (MonadIO m, WithLog env m, Has Manager env)
+    => Text
+    -> m (Maybe ByteString)
 downloadFile url = do
-    -- TODO: put in the context to not create each time
-    man <- newTlsManager
+    man <- grab @Manager
     let req = fromString $ toString url
     log I $ "Attempting to download file from " <> url <> " ..."
     response <- liftIO $ httpLbs req man

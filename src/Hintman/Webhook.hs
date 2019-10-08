@@ -56,7 +56,13 @@ issueCommentHook :: MonadIO m => RepoWebhookEvent -> ((), PullRequestEvent) -> m
 issueCommentHook _ ev = print $ evPullReqPayload $ snd ev
 
 appInstalledHook
-    :: (MonadIO m, MonadTokenStorage m, Has AppInfo env, WithError m, WithLog env m)
+    :: ( MonadIO m
+       , MonadTokenStorage m
+       , Has AppInfo env
+       , Has Manager env
+       , WithError m
+       , WithLog env m
+       )
     => RepoWebhookEvent
     -> ((), InstallationEvent)
     -> m ()
@@ -76,7 +82,13 @@ appInstalledHook _ ((), ev) = do
             log W $ "Other installation action: " <> msg
 
 repoInstalledHook
-    :: (MonadIO m, MonadTokenStorage m, Has AppInfo env, WithError m, WithLog env m)
+    :: ( MonadIO m
+       , MonadTokenStorage m
+       , Has AppInfo env
+       , Has Manager env
+       , WithError m
+       , WithLog env m
+       )
     => RepoWebhookEvent
     -> ((), InstallationRepositoriesEvent)
     -> m ()
@@ -98,6 +110,7 @@ cacheInstallation
     :: ( MonadTokenStorage m
        , MonadIO m
        , Has AppInfo env
+       , Has Manager env
        , WithError m
        , WithLog env m
        )

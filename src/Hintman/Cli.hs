@@ -1,5 +1,6 @@
 module Hintman.Cli
     ( CliArguments(..)
+    , defaultCliArguments
     , cliArguments
     ) where
 
@@ -11,6 +12,12 @@ import Options.Applicative (Parser, auto, execParser, fullDesc, help, helper, in
 data CliArguments = CliArguments
     { cliArgumentsLogging :: Bool
     , cliArgumentsPort    :: Maybe Int
+    }
+
+defaultCliArguments :: CliArguments
+defaultCliArguments = CliArguments
+    { cliArgumentsLogging = False
+    , cliArgumentsPort = Nothing
     }
 
 parseCliArguments :: Parser CliArguments

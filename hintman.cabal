@@ -129,7 +129,8 @@ test-suite hintman-test
   import:              common-options
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
-  other-modules:       Test.Config
+  other-modules:       Test.Assert
+                       Test.Config
                        Test.Data
                        Test.HLint
                        Test.Suggestion
