@@ -1,37 +1,34 @@
 # hintman
 
-[![Hackage](https://img.shields.io/hackage/v/hintman.svg)](https://hackage.haskell.org/package/hintman)
-[![MPL-2.0 license](https://img.shields.io/badge/license-MPL--2.0-blue.svg)](LICENSE)
-[![Stackage Lts](http://stackage.org/package/hintman/badge/lts)](http://stackage.org/lts/package/hintman)
-[![Stackage Nightly](http://stackage.org/package/hintman/badge/nightly)](http://stackage.org/nightly/package/hintman)
+[![GitHub App](https://img.shields.io/badge/GitHub-marketplace-yellow?logo=GitHub&style=flat-square)](https://github.com/apps/hint-man)
 [![Build status](https://secure.travis-ci.org/kowainik/hintman.svg)](https://travis-ci.org/kowainik/hintman)
+[![MPL-2.0 license](https://img.shields.io/badge/license-MPL--2.0-blue.svg)](LICENSE)
 
-GitHub application to suggest hints
+Hintman is a GitHub application that automatically submits reviews to opened
+pull requests in your repositories with inline suggestions.
 
+## Features
 
-## How to test GitHub application?
+Current set of features includes:
 
-### Prerequisites
++ Submitting inline [HLint](https://github.com/ndmitchell/hlint)
+  suggestions to Haskell source code files
 
-1. `smee`:
-   + `npm install --global smee-client`
-2. `cabal` or `stack`
+  > TODO: add a screenshot after new logo
 
-### How to run
+Stay tuned and watch for the updates!
 
-1. Run `smee` forwarder in a separate terminal window:
-    + `smee -u "https://smee.io/uTG0BCXnjq4DEff7" -p 8080`
-2. Run `backend`:
-    + `KEY=<SECRET_KEY> PK_PATH=<PATH_TO_PEM_FILE> cabal new-run hintman -- -p 8080`
-3. Open GitHub application and press `Configure` button to add it to your account:
-    + https://github.com/apps/hint-man
-4. After adding access to your personal profile, choose `Select repositories`
-   repository access and it this application to any of your repositories. After
-   adding the repo to app and saving preferences, you should be able to see the
-   following:
-   + Incoming requests in the running backend
-   + Terminal with `smee` shows successfull status codes
-   + You can visit `smee` URL from above to see events there.
+## Motivation
 
-Current backend just prints to terminal all incoming requests. GitHub app
-installation is one of those requests.
+If you're an open source maintainer, reviewing incoming pull requests from
+various contributors can be tedious. You want to ensure excellent code quality.
+But you don't want to spend your time on things that can be automated. Hintman
+helps you with that! It submits inline suggestions to all open pull requests so
+you can apply them immediately.
+
+## Installation
+
+To enable Hintman reviews, follow the link below and install it for
+all accounts and repositories where you would like it to use.
+
+* [Hintman App](https://github.com/apps/hint-man)
