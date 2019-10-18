@@ -18,6 +18,7 @@ import Text.Diff.Parse.Types (FileDelta (..), FileStatus (..))
 import Hintman.Core.PrInfo (ModifiedFile (..), Owner (..), PrInfo (..), Repo (..), Sha (..))
 import Hintman.Core.Review (Comment)
 import Hintman.Hint.HLint (getHLintHints)
+import Hintman.Hint.TrailingSpaces (getTrailingSpacesComments)
 
 import qualified Data.Text as T
 
@@ -27,7 +28,8 @@ import qualified Data.Text as T
 getAllComments :: (MonadIO m, WithLog env m) => PrInfo -> m [Comment]
 getAllComments prInfo = do
     modFiles <- getModifiedFiles prInfo
-    getHLintHints modFiles
+    (getTrailingSpacesComments modFiles ++) <$> getHLintHints modFiles
+
 
 -- | Get all modified files in the PR.
 getModifiedFiles

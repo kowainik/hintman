@@ -80,6 +80,7 @@ library
 
                          Hintman.Hint
                            Hintman.Hint.HLint
+                           Hintman.Hint.Position
                            Hintman.Hint.TrailingSpaces
 
   build-depends:       aeson ^>= 1.4.4.0
@@ -128,11 +129,10 @@ test-suite hintman-test
   hs-source-dirs:      test
   other-modules:       Test.Data
                        Test.HLint
-                       Test.Suggestion
+                       Test.TrailingSpaces
   main-is:             Spec.hs
 
   build-depends:       co-log
-                     , hedgehog ^>= 1.0
                      , hintman
                      , hspec ^>= 2.7.1
                      , text ^>= 1.2.3

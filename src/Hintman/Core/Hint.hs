@@ -33,8 +33,8 @@ parseHintType = inverseMap showHintType
 
 
 data Line = Line
-    { lineRow  :: Int
-    , lineBody :: Text
+    { lineNumber :: !Int
+    , lineBody   :: !Text
     } deriving (Eq, Show)
 
 data Suggestion = Suggestion
