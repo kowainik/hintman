@@ -7,15 +7,14 @@ import Hedgehog (Gen, Group (..), MonadGen, Property, PropertyName, checkParalle
                  (===))
 import Test.Hspec (Spec, context, describe, it, shouldBe)
 
-import Hintman.Config (SuggestionType (..))
-import Hintman.Suggestion.Core (Line (..), LineChange (..), Suggestion (..), toLines)
+import Hintman.Core.Hint (HintType (..), Line (..), LineChange (..), Suggestion (..), toLines)
 
 import qualified Data.Text as T
 import qualified Hedgehog.Gen as Gen
 import qualified Hedgehog.Range as Range
 
-import qualified Hintman.Suggestion.TrailingNewline as N
-import qualified Hintman.Suggestion.TrailingSpaces as S
+import qualified Hintman.Hint.TrailingNewline as N
+import qualified Hintman.Hint.TrailingSpaces as S
 
 
 suggestionSpec :: Spec

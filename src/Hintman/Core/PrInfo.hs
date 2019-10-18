@@ -11,11 +11,14 @@ module Hintman.Core.PrInfo
        , FullRepo (..)
        , Repositories (..)
        , displayFullRepo
+
+         -- * Files
+       , ModifiedFile (..)
        ) where
 
 import Data.Aeson (withObject, (.:))
 import Servant (ToHttpApiData (..))
-import Text.Diff.Parse.Types (FileDeltas)
+import Text.Diff.Parse.Types (FileDelta, FileDeltas)
 
 import qualified Data.Text as T
 
@@ -85,3 +88,10 @@ newtype PrNumber = PrNumber
 instance ToHttpApiData PrNumber where
     toUrlPiece :: PrNumber -> Text
     toUrlPiece (PrNumber num) = show num <> ".diff"
+
+-- | Information about modified file.
+data ModifiedFile = ModifiedFile
+    { mfDelta   :: !FileDelta
+    , mfPath    :: !FilePath  -- ^ Path to the destination file
+    , mfContent :: !(Maybe ByteString) -- ^ File content (if retrieved)
+    }

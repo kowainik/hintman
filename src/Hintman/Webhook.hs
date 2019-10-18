@@ -25,7 +25,7 @@ import Hintman.Core.PrInfo (Owner (..), PrInfo (..), PrNumber (..), Repo (..), S
 import Hintman.Core.Token (AppInfo, InstallationId (..), InstallationToken (..))
 import Hintman.Diff (fetchGitHubDiff)
 import Hintman.Effect.TokenStorage (MonadTokenStorage (..), acquireInstallationToken)
-import Hintman.HLint (runHLint)
+import Hintman.Hint (getAllComments)
 import Hintman.Installation (createInstallationToken, mkJwtToken)
 
 
@@ -85,7 +85,7 @@ issueCommentHook _ ((), ev) = case evPullReqAction ev of
             Left err -> log E $ "Failed to fetch PR deltas: " <> toText err
             Right prInfoDelta -> do
                 let prInfo = PrInfo{..}
-                comments <- runHLint prInfo
+                comments <- getAllComments prInfo
                 token <- itToken <$> acquireInstallationToken prInfoOwner
                 submitReview token prInfo comments
 

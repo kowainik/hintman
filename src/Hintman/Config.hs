@@ -2,45 +2,32 @@
 
 module Hintman.Config
        ( HintmanConfig(..)
-       , SuggestionType(..)
        , loadFileConfig
        ) where
 
 import Control.Exception (IOException, catch)
-import Relude.Extra.Enum (inverseMap)
 import Toml (AnyValue (..), LoadTomlException, TomlBiMap, TomlCodec, (.=))
+
+import Hintman.Core.Hint (HintType (..), parseHintType, showHintType)
 
 import qualified Toml
 
 
-data SuggestionType
-    = TrailingSpaces
-    | TrailingNewlines
-    deriving (Eq, Read, Show, Bounded, Enum)
-
 newtype HintmanConfig = HintmanConfig
-    { hintmanConfigSuggestionTypes :: [SuggestionType]
+    { hintmanConfigHintTypes :: [HintType]
     } deriving (Eq, Show)
 
 defaultHintmanConfig :: HintmanConfig
 defaultHintmanConfig = HintmanConfig [TrailingSpaces, TrailingNewlines]
 
-showSuggestionType :: SuggestionType -> Text
-showSuggestionType  = \case
-    TrailingSpaces   -> "trailing-spaces"
-    TrailingNewlines -> "trailing-newlines"
-
-parseSuggestionType :: Text -> Maybe SuggestionType
-parseSuggestionType = inverseMap showSuggestionType
-
 hintmanConfiguationCodec :: TomlCodec HintmanConfig
 hintmanConfiguationCodec = HintmanConfig
-    <$> Toml.arrayOf _SuggestionType "checks" .= hintmanConfigSuggestionTypes
+    <$> Toml.arrayOf _HintType "checks" .= hintmanConfigHintTypes
   where
-    _SuggestionType :: TomlBiMap SuggestionType AnyValue
-    _SuggestionType = Toml._TextBy
-        showSuggestionType
-        (maybeToRight "Couldn't parsse 'SuggestionType'" . parseSuggestionType)
+    _HintType :: TomlBiMap HintType AnyValue
+    _HintType = Toml._TextBy
+        showHintType
+        (maybeToRight "Couldn't parse 'HintType'" . parseHintType)
 
 loadFileConfig :: FilePath -> IO HintmanConfig
 loadFileConfig path =

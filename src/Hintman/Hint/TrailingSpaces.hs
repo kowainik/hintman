@@ -1,11 +1,16 @@
-module Hintman.Suggestion.TrailingSpaces
-       ( suggest
+module Hintman.Hint.TrailingSpaces
+       ( getTrailingSpacesComments
+       , suggest
        ) where
 
 import Data.Text (stripEnd)
-import Hintman.Config (SuggestionType (..))
-import Hintman.Suggestion.Core (Line (..), LineChange (..), Suggestion (..))
+import Hintman.Core.Hint (HintType (TrailingSpaces), Line (..), LineChange (..), Suggestion (..))
+import Hintman.Core.PrInfo (ModifiedFile (..))
+import Hintman.Core.Review (Comment (..))
 
+
+getTrailingSpacesComments :: [ModifiedFile] -> [Comment]
+getTrailingSpacesComments _ = undefined
 
 suggest :: FilePath -> [Line] -> [Suggestion]
 suggest path = mapMaybe mSuggest

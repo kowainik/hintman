@@ -1,12 +1,18 @@
-module Hintman.Suggestion.TrailingNewline
-       ( suggest
+module Hintman.Hint.TrailingNewline
+       ( getTrailingNewlineComments
+
+       , suggest
        ) where
 
-import Hintman.Config (SuggestionType (..))
-import Hintman.Suggestion.Core (Line (..), LineChange (..), Suggestion (..))
+import Hintman.Core.Hint (HintType (TrailingNewlines), Line (..), LineChange (..), Suggestion (..))
+import Hintman.Core.PrInfo (ModifiedFile (..))
+import Hintman.Core.Review (Comment (..))
 
 import qualified Data.Text as T
 
+
+getTrailingNewlineComments :: [ModifiedFile] -> [Comment]
+getTrailingNewlineComments _ = undefined
 
 suggest :: FilePath -> [Line] -> [Suggestion]
 suggest path = generateResult . trailingNewLines . reverse

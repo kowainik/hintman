@@ -5,8 +5,10 @@ module Test.HLint
 import Colog (LoggerT, usingLoggerT)
 import Test.Hspec (Spec, describe, it, shouldBe, shouldSatisfy)
 
+import Hintman.Core.Hint (HintType (HLint))
+import Hintman.Core.PrInfo (PrInfo)
 import Hintman.Core.Review (Comment (..))
-import Hintman.HLint (runHLint)
+import Hintman.Hint (getAllComments)
 
 import Test.Data (pr1, pr2, pr3)
 
@@ -36,11 +38,15 @@ hlintSpec = describe "HLint works on opened PRs" $ do
     it "creates <$> over fmap comment for PR 2" $
         pr2 >>= runLog . runHLint >>= (`shouldSatisfy` (fmapComment `elem`))
   where
+    runHLint :: (MonadIO m, WithLog env m) => PrInfo -> m [Comment]
+    runHLint prInfo = filter ((==) HLint . commentHintType) <$> getAllComments prInfo
+
     mkComment :: Int -> Text -> Comment
     mkComment pos txt = Comment
         { commentPath = "Main.hs"
         , commentPosition = pos
         , commentBody = txt
+        , commentHintType = HLint
         }
 
     etaComment :: Comment

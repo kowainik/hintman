@@ -6,7 +6,8 @@ import System.IO.Silently (capture)
 import System.IO.Temp (writeSystemTempFile)
 import Test.Hspec (Spec, context, describe, it, shouldBe, shouldReturn)
 
-import Hintman.Config (HintmanConfig (..), SuggestionType (..), loadFileConfig)
+import Hintman.Config (HintmanConfig (..), loadFileConfig)
+import Hintman.Core.Hint (HintType (..))
 
 
 configSpec :: Spec

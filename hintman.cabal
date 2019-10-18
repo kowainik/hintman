@@ -64,6 +64,7 @@ library
                            Hintman.App.Error
                            Hintman.App.Monad
 
+                         Hintman.Core.Hint
                          Hintman.Core.Key
                          Hintman.Core.PrInfo
                          Hintman.Core.Review
@@ -75,14 +76,13 @@ library
                          Hintman.Comment
                          Hintman.Config
                          Hintman.Diff
-                         Hintman.HLint
                          Hintman.Installation
                          Hintman.Webhook
 
-                         Hintman.Suggestion.Core
-                         Hintman.Suggestion.Aggregation
-                         Hintman.Suggestion.TrailingNewline
-                         Hintman.Suggestion.TrailingSpaces
+                         Hintman.Hint
+                           Hintman.Hint.HLint
+                           Hintman.Hint.TrailingNewline
+                           Hintman.Hint.TrailingSpaces
 
   build-depends:       aeson ^>= 1.4.4.0
                      , bytestring ^>= 0.10.8.2
