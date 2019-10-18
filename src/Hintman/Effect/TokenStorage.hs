@@ -79,7 +79,7 @@ initialiseInstallationIds = do
 
         Repositories repositories <- performRequest @Repositories
             $ mkRepositoriesRequest $ itToken installationToken
-        log D $ "This ID is for the following repos: "
+        log I $ "This ID is for the following repos: "
             <> T.intercalate ", " (map displayFullRepo repositories)
 
         for_ repositories $ \FullRepo{..} -> insertToken frOwner installationToken

@@ -74,14 +74,12 @@ library
 
                          Hintman.Cli
                          Hintman.Comment
-                         Hintman.Config
                          Hintman.Diff
                          Hintman.Installation
                          Hintman.Webhook
 
                          Hintman.Hint
                            Hintman.Hint.HLint
-                           Hintman.Hint.TrailingNewline
                            Hintman.Hint.TrailingSpaces
 
   build-depends:       aeson ^>= 1.4.4.0
@@ -107,7 +105,6 @@ library
                      , servant-server ^>= 0.16
                      , text ^>= 1.2.3
                      , time >= 1.8 && < 1.10
-                     , tomland ^>= 1.1.0.1
                      , transformers ^>= 0.5.5.0
                      , unliftio ^>= 0.2
                      , unordered-containers
@@ -120,17 +117,16 @@ executable hintman
   import:              common-options
   hs-source-dirs:      app
   main-is:             Main.hs
-
   build-depends:       hintman
-
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  ghc-options:         -threaded
+                       -rtsopts
+                       -with-rtsopts=-N
 
 test-suite hintman-test
   import:              common-options
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
-  other-modules:       Test.Config
-                       Test.Data
+  other-modules:       Test.Data
                        Test.HLint
                        Test.Suggestion
   main-is:             Spec.hs
@@ -139,8 +135,8 @@ test-suite hintman-test
                      , hedgehog ^>= 1.0
                      , hintman
                      , hspec ^>= 2.7.1
-                     , silently
                      , text ^>= 1.2.3
-                     , temporary
 
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  ghc-options:         -threaded
+                       -rtsopts
+                       -with-rtsopts=-N

@@ -13,7 +13,6 @@ import System.Environment (lookupEnv)
 
 import Hintman.App (Env (..), runAppLogIO_)
 import Hintman.Cli (CliArguments (..), cliArguments)
-import Hintman.Config (loadFileConfig)
 import Hintman.Core.Key (gitHubKey)
 import Hintman.Core.Token (AppInfo (..))
 import Hintman.Effect.TokenStorage (initialiseInstallationIds)
@@ -43,8 +42,6 @@ runOn cli = do
 
     let siteString = "https://localhost:" <> show port
     putTextLn ("Starting hintman site at: " <> siteString)
-
-    envConfig <- loadFileConfig "hintman-config.toml"
 
     -- get webhook secret
     !key <- maybe (error "KEY not found") C8.pack <$> lookupEnv "KEY"

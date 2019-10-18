@@ -14,19 +14,21 @@ import Relude.Extra.Enum (inverseMap)
 
 
 data HintType
-    = TrailingSpaces
+    = HLint
+    | TrailingSpaces
     | TrailingNewlines
-    | HLint
     deriving (Eq, Read, Show, Bounded, Enum)
 
 showHintType :: HintType -> Text
 showHintType = \case
+    HLint            -> "hlint"
     TrailingSpaces   -> "trailing-spaces"
     TrailingNewlines -> "trailing-newlines"
-    HLint            -> "hlint"
+{-# INLINE showHintType #-}
 
 parseHintType :: Text -> Maybe HintType
 parseHintType = inverseMap showHintType
+{-# INLINE parseHintType #-}
 
 
 

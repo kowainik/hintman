@@ -10,7 +10,6 @@ module Hintman.App.Env
 
 import Colog (HasLog (..), LogAction, Message)
 
-import Hintman.Config (HintmanConfig)
 import Hintman.Core.Key (GitHubKey)
 import Hintman.Core.PrInfo (Owner)
 import Hintman.Core.Token (AppInfo, InstallationToken)
@@ -23,8 +22,7 @@ to the token won't renew it twice making one of the tokens invalid.
 type TokenCache = IORef (HashMap Owner (MVar InstallationToken))
 
 data Env m = Env
-    { envConfig     :: !HintmanConfig
-    , envGitHubKey  :: !GitHubKey
+    { envGitHubKey  :: !GitHubKey
     , envAppInfo    :: !AppInfo
     , envTokenCache :: !TokenCache
     , envLogAction  :: !(LogAction m Message)

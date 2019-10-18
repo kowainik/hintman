@@ -1,18 +1,17 @@
 module Main (main) where
 
+import Hedgehog (checkParallel)
 import System.IO (hSetEncoding, utf8)
 import Test.Hspec (hspec)
 
-import Test.Config (configSpec)
 import Test.HLint (hlintSpec)
-import Test.Suggestion (suggestionSpec, suggestionTests)
+import Test.Suggestion (hintProperties)
+
 
 main :: IO ()
 main = do
     hSetEncoding stdout utf8
     hSetEncoding stderr utf8
-    hspec $ do
-        configSpec
-        suggestionSpec
-        hlintSpec
-    ifM suggestionTests exitSuccess exitFailure
+
+    hspec hlintSpec
+    ifM (checkParallel hintProperties) exitSuccess exitFailure

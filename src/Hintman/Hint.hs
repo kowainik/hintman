@@ -1,13 +1,13 @@
-{- |
-Aggregator for all automatic hint we did.
-Now it deletes:
- - trailing newlines
- - trailing spaces
+{- | This module contains function that creates all comments for the PR review.
+
+Currently supported features:
+
+* HLint suggestions
+* Trailing spaces removal
 -}
 
 module Hintman.Hint
        ( getAllComments
-       , aggregate
        ) where
 
 import Network.HTTP.Client (Response (..), httpLbs)
@@ -15,16 +15,15 @@ import Network.HTTP.Client.TLS (newTlsManager)
 import Network.HTTP.Types (Status (..))
 import Text.Diff.Parse.Types (FileDelta (..), FileStatus (..))
 
-import Hintman.Core.Hint (Line (..), Suggestion (..), toLines)
 import Hintman.Core.PrInfo (ModifiedFile (..), Owner (..), PrInfo (..), Repo (..), Sha (..))
 import Hintman.Core.Review (Comment)
 import Hintman.Hint.HLint (getHLintHints)
 
 import qualified Data.Text as T
-import qualified Hintman.Hint.TrailingNewline as STN
-import qualified Hintman.Hint.TrailingSpaces as STS
 
 
+{- | Get all review comments of all supported types for the PR.
+-}
 getAllComments :: (MonadIO m, WithLog env m) => PrInfo -> m [Comment]
 getAllComments prInfo = do
     modFiles <- getModifiedFiles prInfo
@@ -82,24 +81,3 @@ createFileDownloadUrl PrInfo{..} (toText -> file) = T.intercalate "/"
     , unSha prInfoHead
     , file
     ]
-
-
--- | Add suggestions to given text.
-aggregate :: FilePath -> Text -> [Suggestion]
-aggregate path txt = deleteSuggest ++ editSuggest
-  where
-    -- First, aggregate deletes trailingNewLines
-    deleteSuggest :: [Suggestion]
-    deleteSuggest = STN.suggest path lineList
-
-    deletedLines :: [Line]
-    deletedLines = map suggestionLine deleteSuggest
-    -- Second, it consumes the rest lines to suggest edit.
-    toEditLines :: [Line]
-    toEditLines = filter (`notElem` deletedLines) lineList
-
-    editSuggest :: [Suggestion]
-    editSuggest = STS.suggest path toEditLines
-
-    lineList :: [Line]
-    lineList = toLines txt

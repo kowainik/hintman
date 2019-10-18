@@ -1,38 +1,24 @@
+-- TODO: rename to
+-- Test.Hint
+--   Test.Hint.HLint
+--   Test.Hint.TrailingSpaces
 module Test.Suggestion
-       ( suggestionSpec
-       , suggestionTests
+       ( hintProperties
        ) where
 
-import Hedgehog (Gen, Group (..), MonadGen, Property, PropertyName, checkParallel, forAll, property,
-                 (===))
-import Test.Hspec (Spec, context, describe, it, shouldBe)
+import Hedgehog (Gen, Group (..), MonadGen, Property, PropertyName, forAll, property, (===))
 
-import Hintman.Core.Hint (HintType (..), Line (..), LineChange (..), Suggestion (..), toLines)
+import Hintman.Core.Hint (Line (..), Suggestion (..), toLines)
 
 import qualified Data.Text as T
 import qualified Hedgehog.Gen as Gen
 import qualified Hedgehog.Range as Range
 
-import qualified Hintman.Hint.TrailingNewline as N
 import qualified Hintman.Hint.TrailingSpaces as S
 
 
-suggestionSpec :: Spec
-suggestionSpec = describe "Trailing newlines removal" $ do
-    context "When file has trailing newlines" $
-      it "suggests removal" $ do
-        let given = toLines "foo bar\n\nbaz\n\n"
-            expected =
-                [ Suggestion "foo" (Line 4 T.empty) (LineChange T.empty Nothing TrailingNewlines) ]
-        N.suggest "foo" given `shouldBe` expected
-    context "When file has no trailing newlines" $
-      it "suggests nothing" $ do
-        let given = toLines "foo bar\nbaz\n"
-            expected = []
-        N.suggest "foo" given `shouldBe` expected
-
-suggestionTests :: IO Bool
-suggestionTests = checkParallel (Group "Test.Suggest" props)
+hintProperties :: Group
+hintProperties = Group "Test.Hint" props
   where
     props :: [(PropertyName, Property)]
     props = [ ("suggest edits when trailing spaces", testSuggestTrailing) ]
