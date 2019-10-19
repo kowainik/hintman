@@ -53,12 +53,12 @@ type HintmanAPI = ToServantApi HintmanSite
 
 hintmanServer :: HintmanSite (AsServerT App)
 hintmanServer = HintmanSite
-    { hintmanListenRoute = issueCommentHook
-    , hintmanInstallAppRoute = appInstalledHook
+    { hintmanListenRoute      = prReviewHook
+    , hintmanInstallAppRoute  = appInstalledHook
     , hintmanInstallRepoRoute = repoInstalledHook
     }
 
-issueCommentHook
+prReviewHook
     :: forall env m .
        ( MonadTokenStorage m
        , MonadUnliftIO m
@@ -69,7 +69,7 @@ issueCommentHook
     => RepoWebhookEvent
     -> ((), PullRequestEvent)
     -> m ()
-issueCommentHook _ ((), ev) = case evPullReqAction ev of
+prReviewHook _ ((), ev) = case evPullReqAction ev of
     PullRequestOpenedAction -> hintmanAction
     _                       -> pass
   where
@@ -80,6 +80,15 @@ issueCommentHook _ ((), ev) = case evPullReqAction ev of
         let prInfoRepo = Repo $ whRepoName repo
         let prInfoHead = Sha $ whPullReqTargetSha $ whPullReqHead $ evPullReqPayload ev
         let prInfoNumber = PrNumber $ evPullReqNumber ev
+
+        log I $ mconcat
+            [ "Review triggered for: "
+            , unOwner prInfoOwner
+            , "/"
+            , unRepo prInfoRepo
+            , "/"
+            , show $ unPrNumber prInfoNumber
+            ]
 
         fetchGitHubDiff prInfoOwner prInfoRepo prInfoNumber >>= \case
             Left err -> log E $ "Failed to fetch PR deltas: " <> toText err

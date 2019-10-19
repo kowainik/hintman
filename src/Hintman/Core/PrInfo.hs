@@ -94,4 +94,4 @@ data ModifiedFile = ModifiedFile
     { mfDelta   :: !FileDelta
     , mfPath    :: !FilePath  -- ^ Path to the destination file
     , mfContent :: !(Maybe ByteString) -- ^ File content (if retrieved)
-    }
+    } deriving (Show)

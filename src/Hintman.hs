@@ -4,7 +4,7 @@ module Hintman
        ( runHintman
        ) where
 
-import Colog (richMessageAction)
+import Colog (Msg (..), cfilter, richMessageAction)
 import Data.X509 (PrivKey (PrivKeyRSA))
 import Data.X509.File (readKeyFile)
 import Data.X509.Memory (readKeyFileFromMemory)
@@ -69,7 +69,9 @@ runOn cli = do
             }
 
     envTokenCache <- newIORef mempty
-    let envLogAction = richMessageAction
+    let envLogAction = cfilter
+            (\Msg{..} -> msgSeverity >= Info)
+            richMessageAction
 
     let env = Env{..}
 

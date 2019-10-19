@@ -36,11 +36,15 @@ import qualified Data.Text as T
 newtype JwtToken = JwtToken Text
     deriving (Show)
 
-{- | Expiration time of the JWT token. Set to 10 minutes (max allowed by
-GitHub).
+{- | Expiration time of the JWT token. Set to 9 minutes. Max allowed is 10
+minutes but we set a bit lower to avoid the following error:
+
+@
+'Expiration time' claim ('exp') is too far in the future
+@
 -}
 jwtExpiryTime :: NominalDiffTime
-jwtExpiryTime = 600
+jwtExpiryTime = 540
 
 {- | Create JWT token that will be used later to issue
 'InstallationAccessToken'.

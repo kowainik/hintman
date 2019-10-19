@@ -75,6 +75,7 @@ library
                          Hintman.Cli
                          Hintman.Comment
                          Hintman.Diff
+                         Hintman.Download
                          Hintman.Installation
                          Hintman.Webhook
 
@@ -89,6 +90,7 @@ library
                      , containers
                      , cryptonite ^>= 0.25
                      , diff-parse ^>= 0.2.1
+                     , directory ^>= 1.3.3.0
                      , filepath ^>= 1.4
                      , github ^>= 0.22
                      , github-webhooks ^>= 0.11.0

@@ -73,6 +73,7 @@ initialiseInstallationIds = do
     installationIds <- performRequest @[InstallationId]
         $ mkInstallationsRequest jwtToken
 
+    log I $ "Total installation IDs: " <> show (length installationIds)
     for_ installationIds $ \installationId -> do
         log D $ "Installation id: " <> show installationId
         installationToken <- createInstallationToken jwtToken installationId

@@ -11,14 +11,18 @@ module Hintman.Hint.HLint
        ) where
 
 import Language.Haskell.Exts.SrcLoc (srcSpanEnd, srcSpanStart)
-import Language.Haskell.HLint4 (Idea (..), Note (..), Severity (..), applyHints, autoSettings,
-                                parseModuleEx)
-import System.FilePath (takeExtension)
-import Text.Diff.Parse.Types (FileDelta (..))
+import Language.Haskell.HLint4 (Classify, Hint, Idea (..), Note (..), ParseFlags, Severity (..),
+                                applyHints, autoSettings, defaultParseFlags, findSettings,
+                                getHLintDataDir, parseFlagsAddFixities, parseModuleEx,
+                                readSettingsFile, resolveHints)
+import System.Directory (createDirectoryIfMissing, doesFileExist)
+import System.FilePath (takeExtension, (</>))
+import Text.Diff.Parse.Types (FileDelta)
 
 import Hintman.Core.Hint (HintType (HLint))
 import Hintman.Core.PrInfo (ModifiedFile (..))
 import Hintman.Core.Review (Comment (..))
+import Hintman.Download (downloadFile)
 import Hintman.Hint.Position (getTargetCommentPosition, (!!?))
 
 import qualified Data.Text as T
@@ -56,7 +60,7 @@ getFileHLintComments ModifiedFile{..} = case mfContent of
 
 getFileHLintSuggestions :: (MonadIO m, WithLog env m) => FilePath -> Text -> m [Idea]
 getFileHLintSuggestions fileName content = do
-    (flags, classify, hint) <- liftIO autoSettings
+    (flags, classify, hint) <- customHLintSettings
     liftIO (parseModuleEx flags fileName (Just $ toString content)) >>= \case
         Right m -> pure $ applyHints classify hint [m]
         Left _err -> [] <$ log E "Hlint failed with some error" -- TODO: log err
@@ -115,3 +119,42 @@ createCommentText content Idea{..} = do
         use :: Note -> Bool
         use ValidInstance{} = False -- Not important enough to tell an end user
         use _               = True
+
+{- | These custom settings are required to make Hintman work on both deployed
+Heroku build and locally. This function does the following:
+
+1. First, uses default HLint location to find file (to work locally as before).
+2. If file not found, uses it from the specified location (to work on prod).
+-}
+customHLintSettings
+    :: forall m env .
+       (MonadIO m, WithLog env m)
+    => m (ParseFlags, [Classify], Hint)
+customHLintSettings = do
+    hlintDataDir <- liftIO getHLintDataDir
+    let hlintDataFile = hlintDataDir </> "hlint.yaml"
+    doesDataFileExist <- liftIO $ doesFileExist hlintDataFile
+    if doesDataFileExist
+        then liftIO autoSettings
+        else downloadHints >> liftIO customSettings
+  where
+    -- datadir with hlint.yaml file on produnction
+    prodDataDir :: FilePath
+    prodDataDir = ".hlint-v2.2.2"
+
+    -- download default hlint.yaml file to .hlint-data/hlint.yaml
+    downloadHints :: m ()
+    downloadHints = do
+        liftIO $ createDirectoryIfMissing False prodDataDir
+        let hlintUrl = "https://raw.githubusercontent.com/ndmitchell/hlint/v2.2.2/data/hlint.yaml"
+        let hlintPath = prodDataDir </> "hlint.yaml"
+        unlessM (liftIO $ doesFileExist hlintPath) $ downloadFile hlintUrl >>= \case
+            Nothing   -> log E "Couldn't download hlint.yaml"
+            Just file -> writeFileBS hlintPath file
+
+    -- copy-pasted from HLint as recommended in the documentation
+    customSettings :: IO (ParseFlags, [Classify], Hint)
+    customSettings = do
+        (fixities, classify, hints) <- findSettings (readSettingsFile $ Just prodDataDir) Nothing
+        pure (parseFlagsAddFixities fixities defaultParseFlags, classify, resolveHints hints)
+
