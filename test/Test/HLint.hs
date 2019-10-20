@@ -10,16 +10,16 @@ import Hintman.Core.PrInfo (PrInfo)
 import Hintman.Core.Review (Comment (..))
 import Hintman.Hint (getAllComments)
 
-import Test.Data (pr1, pr2, pr3)
+import Test.Data (pr1, pr2, pr24, pr3)
 
 runLog :: LoggerT Message IO a -> IO a
 runLog = usingLoggerT mempty
 
 hlintSpec :: Spec
 hlintSpec = describe "HLint works on opened PRs" $ do
-    it "works with non-code PRs" $
+    it "works with non-code PRs for PR 1" $
         pr1 >>= runLog . runHLint >>= shouldBe []
-    it "ignores parse errors" $
+    it "ignores parse errors for PR 3" $
         pr3 >>= runLog . runHLint >>= shouldBe []
     it "creates correct eta-reduce comment for PR 2" $
         pr2 >>= runLog . runHLint >>= (`shouldSatisfy` (etaComment `elem`))
@@ -37,20 +37,28 @@ hlintSpec = describe "HLint works on opened PRs" $ do
         pr2 >>= runLog . runHLint >>= (`shouldSatisfy` (redundantDollarComment `elem`))
     it "creates <$> over fmap comment for PR 2" $
         pr2 >>= runLog . runHLint >>= (`shouldSatisfy` (fmapComment `elem`))
+    it "redundant () in one line diff for PR 24" $
+        pr24 >>= runLog . runHLint >>= (`shouldBe` removeParensComment)
   where
     runHLint :: (MonadIO m, WithLog env m) => PrInfo -> m [Comment]
     runHLint prInfo = filter ((==) HLint . commentHintType) <$> getAllComments prInfo
 
-    mkComment :: Int -> Text -> Comment
-    mkComment pos txt = Comment
-        { commentPath = "Main.hs"
+    mkComment :: Text -> Int -> Text -> Comment
+    mkComment fileName pos txt = Comment
+        { commentPath = fileName
         , commentPosition = pos
         , commentBody = txt
         , commentHintType = HLint
         }
 
+    mkMainComment :: Int -> Text -> Comment
+    mkMainComment = mkComment "Main.hs"
+
+    mkBigExampleComment :: Int -> Text -> Comment
+    mkBigExampleComment = mkComment "BigExample.hs"
+
     etaComment :: Comment
-    etaComment = mkComment 10 $ unlines
+    etaComment = mkMainComment 10 $ unlines
         [ "Warning: Eta reduce"
         , "```suggestion"
         , "greet = (++) \"Hello \""
@@ -58,7 +66,7 @@ hlintSpec = describe "HLint works on opened PRs" $ do
         ]
 
     avoidLambdaComment :: Comment
-    avoidLambdaComment = mkComment 13 $ unlines
+    avoidLambdaComment = mkMainComment 13 $ unlines
         [ "Warning: Avoid lambda"
         , "```suggestion"
         , "foo a b = (succ) a + b"
@@ -66,7 +74,7 @@ hlintSpec = describe "HLint works on opened PRs" $ do
         ]
 
     removePragmaComment :: Comment
-    removePragmaComment = mkComment 1 $ unlines
+    removePragmaComment = mkMainComment 1 $ unlines
         [ "Warning: Unused LANGUAGE pragma"
         , "```suggestion"
         , ""
@@ -74,7 +82,7 @@ hlintSpec = describe "HLint works on opened PRs" $ do
         ]
 
     multilineComment :: Comment
-    multilineComment = mkComment 18 $ unlines
+    multilineComment = mkMainComment 18 $ unlines
         [ "Warning: Eta reduce"
         , "```"
         , "multiline = putStrLn"
@@ -82,7 +90,7 @@ hlintSpec = describe "HLint works on opened PRs" $ do
         ]
 
     redundantParenComment :: Comment
-    redundantParenComment = mkComment 21 $ unlines
+    redundantParenComment = mkMainComment 21 $ unlines
         [ "Warning: Redundant bracket"
         , "```suggestion"
         , "redundantParen x = succ $ x - 1"
@@ -90,7 +98,7 @@ hlintSpec = describe "HLint works on opened PRs" $ do
         ]
 
     redundantDoComment :: Comment
-    redundantDoComment = mkComment 24 $ unlines
+    redundantDoComment = mkMainComment 24 $ unlines
         [ "Warning: Redundant do"
         , "```suggestion"
         , "redundantDo = putStrLn \"Hello\""
@@ -98,7 +106,7 @@ hlintSpec = describe "HLint works on opened PRs" $ do
         ]
 
     redundantDollarComment :: Comment
-    redundantDollarComment = mkComment 27 $ unlines
+    redundantDollarComment = mkMainComment 27 $ unlines
         [ "Suggestion: Redundant $"
         , "```suggestion"
         , "redundantDollar = putStrLn \"<- What is this dollar about?\""
@@ -106,9 +114,18 @@ hlintSpec = describe "HLint works on opened PRs" $ do
         ]
 
     fmapComment :: Comment
-    fmapComment = mkComment 30 $ unlines
+    fmapComment = mkMainComment 30 $ unlines
         [ "Suggestion: Use <$>"
         , "```suggestion"
         , "fmapWarn f = f Control.Applicative.<$> foo bar"
         , "```"
         ]
+
+    removeParensComment :: [Comment]
+    removeParensComment = one $ mkBigExampleComment 5 $ unlines
+        [ "Suggestion: Redundant bracket"
+        , "```suggestion"
+        , "        pr1 >>= runLog . runHLint >>= shouldBe []"
+        , "```"
+        ]
+

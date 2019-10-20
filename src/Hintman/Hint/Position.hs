@@ -64,12 +64,12 @@ getTargetCommentPosition FileDelta{..} commentPos = case fileDeltaContent of
     goHunks :: [Hunk] -> Maybe Int
     goHunks [] = Nothing
     goHunks (Hunk{..}:hs) = case inRange hunkDestRange of
-        Just diffLine -> hunkLines !!? diffLine >>= \line ->
-            -- Only 'Added' lines.
-            if lineAnnotation line == Added
-            then Just (diffLine + 1)
-            else Nothing
         Nothing -> goHunks hs
+        Just diffLine -> do
+            (pos, line) <- diffLinePos diffLine hunkLines
+            -- Only 'Added' lines.
+            guard $ lineAnnotation line == Added
+            Just pos
       where
         -- | Check is the desired line number belongs to this Hunk
         -- and return the corresponding number in the Hunk.
@@ -79,6 +79,30 @@ getTargetCommentPosition FileDelta{..} commentPos = case fileDeltaContent of
                 && (commentPos <= (rangeStartingLineNumber + rangeNumberOfLines))
             then Just $ commentPos - rangeStartingLineNumber
             else Nothing
+
+{- | Returns the relative position of diff line in the given list, ignoring all
+'Removed' lines. For example, if you have the following diff (written with indexes):
+
+@
+0 -> (1, Context "foo")
+1 -> (2, Context "bar")
+2 -> (3, Context "xxx")
+3 -> (4, Removed "yyy")
+4 -> (5, Added   "zzz")
+@
+
+Then the resulting file has only 4 lines, but the diff has 5 elements. So, when
+given number 3 to the argument of 'diffLinePos', it should return
+
+@
+(5, Added "    zzz")
+@
+-}
+diffLinePos :: Int -> [Line] -> Maybe (Int, Line)
+diffLinePos index =
+      (!!? index)
+    . filter ((/=) Removed . lineAnnotation . snd)
+    . zip [1..]
 
 -- | Safe @at@ function.
 (!!?) :: [a] -> Int -> Maybe a

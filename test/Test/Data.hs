@@ -4,6 +4,7 @@ module Test.Data
        , pr1
        , pr2
        , pr3
+       , pr24
        ) where
 
 import Hintman.Core.PrInfo (Owner (..), PrInfo (..), PrNumber (..), Repo (..), Sha (..))
@@ -16,10 +17,11 @@ owner = Owner "kowainik"
 repo :: Repo
 repo = Repo "hintman-target"
 
-pr1, pr2, pr3 :: MonadIO m => m PrInfo
+pr1, pr2, pr3, pr24 :: MonadIO m => m PrInfo
 pr1 = makePr (PrNumber 2) (Sha "vrom911-patch-1")
 pr2 = makePr (PrNumber 3) (Sha "vrom911-patch-2")
 pr3 = makePr (PrNumber 4) (Sha "chshersh/parse-error")
+pr24 = makePr (PrNumber 24) (Sha "chshersh/change-one-in-big")
 
 makePr :: MonadIO m => PrNumber -> Sha -> m PrInfo
 makePr num branch = liftIO (fetchGitHubDiff owner repo num) >>= \case
