@@ -38,6 +38,8 @@ hlintSpec Prs{..} = describe "HLint works on opened PRs" $ do
         runHLint pr2 >>= (`shouldSatisfy` (fmapComment `elem`))
     it "redundant () in one line diff for PR 24" $
         runHLint pr24 >>= (`shouldBe` removeParensComment)
+    it "correct positions in PR 36 with multiple hunks" $
+        runHLint pr36 >>= (`shouldBe` manyHunksComment)
   where
     runHLint :: PrInfo -> IO [Comment]
     runHLint = runWithFilter HLint
@@ -132,3 +134,19 @@ hlintSpec Prs{..} = describe "HLint works on opened PRs" $ do
         , hintIsSuggestion = True
         , ..
         }
+
+    manyHunksComment :: [Comment]
+    manyHunksComment =
+        [ mkBigExampleComment 13 Hint
+            { hintHeader = "Warning: Redundant bracket"
+            , hintBody = "        pr2 >>= runLog . runHLint >>= (`shouldSatisfy` (etaComment `elem`))"
+            , hintIsSuggestion = True
+            , ..
+            }
+        , mkBigExampleComment 22 Hint
+            { hintHeader = "Warning: Redundant bracket"
+            , hintBody = "    multilineComment = mkComment 18 $ unlines"
+            , hintIsSuggestion = True
+            , ..
+            }
+        ]

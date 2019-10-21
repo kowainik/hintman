@@ -23,6 +23,7 @@ data Prs = Prs
     , pr3  :: !PrInfo
     , pr24 :: !PrInfo
     , pr30 :: !PrInfo
+    , pr36 :: !PrInfo
     }
 
 owner :: Owner
@@ -38,6 +39,7 @@ fetchPrs = usingLoggerT richMessageAction $ do
     pr3  <- makePr (PrNumber 4) (Sha "chshersh/parse-error")
     pr24 <- makePr (PrNumber 24) (Sha "chshersh/change-one-in-big")
     pr30 <- makePr (PrNumber 30) (Sha "chshersh/test-hintman")
+    pr36 <- makePr (PrNumber 36) (Sha "chshersh-patch-1")
     pure Prs{..}
 
 makePr :: (WithLog env m, MonadIO m) => PrNumber -> Sha -> m PrInfo
