@@ -16,6 +16,7 @@ import Hintman.Core.PrInfo (ModifiedFile (..), Owner (..), PrInfo (..), Repo (..
 import Hintman.Core.Review (Comment)
 import Hintman.Download (downloadFile)
 import Hintman.Hint.HLint (getHLintHints)
+import Hintman.Hint.TrailingNewlines (getTrailingNewlinesComments)
 import Hintman.Hint.TrailingSpaces (getTrailingSpacesComments)
 
 import qualified Data.Text as T
@@ -25,8 +26,16 @@ import qualified Data.Text as T
 -}
 getAllComments :: (MonadIO m, WithLog env m) => PrInfo -> m [Comment]
 getAllComments prInfo = do
+    -- 1. Get all modified files
     modFiles <- getModifiedFiles prInfo
-    (getTrailingSpacesComments modFiles ++) <$> getHLintHints modFiles
+
+    -- 2. Get all suggestions
+    let trailingSpaces = getTrailingSpacesComments modFiles
+    let trailingNewlines = getTrailingNewlinesComments modFiles
+    hlintHints <- getHLintHints modFiles
+
+    -- 3. return combined result
+    pure $ trailingSpaces ++ trailingNewlines ++ hlintHints
 
 
 -- | Get all modified files in the PR.
@@ -39,6 +48,8 @@ getModifiedFiles prInfo@PrInfo{..} = traverse toModifiedFile $ filter ((/=) Dele
     toModifiedFile :: FileDelta -> m ModifiedFile
     toModifiedFile mfDelta@FileDelta{..} = do
         let mfPath = toString fileDeltaDestFile
+        -- TODO: store 'ByteString' here instead of 'Maybe ByteString'
+        -- if we can't retrieve file content, can as well just ignore it
         mfContent <- downloadFile $ createFileDownloadUrl prInfo mfPath
         pure ModifiedFile{..}
 

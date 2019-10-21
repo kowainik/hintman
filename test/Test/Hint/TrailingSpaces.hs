@@ -1,13 +1,10 @@
--- TODO: rename to
--- Test.Hint
---   Test.Hint.HLint
---   Test.Hint.TrailingSpaces
+{- | Tests for trailing spaces hints
+-}
 
-module Test.TrailingSpaces
+module Test.Hint.TrailingSpaces
        ( trailingSpacesSpec
        ) where
 
-import Colog (LoggerT, usingLoggerT)
 import Test.Hspec (Spec, describe, it, shouldBe, shouldSatisfy)
 
 import Hintman.Core.Hint (HintType (TrailingSpaces))
@@ -15,12 +12,8 @@ import Hintman.Core.PrInfo (PrInfo)
 import Hintman.Core.Review (Comment (..))
 import Hintman.Hint (getAllComments)
 
-import Test.Data (pr1, pr2, pr3)
+import Test.Data (pr1, pr2, pr3, runLog)
 
-
-
-runLog :: LoggerT Message IO a -> IO a
-runLog = usingLoggerT mempty
 
 trailingSpacesSpec :: Spec
 trailingSpacesSpec = describe "Trailing Spaces are removed on opened PRs" $ do

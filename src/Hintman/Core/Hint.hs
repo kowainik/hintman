@@ -3,10 +3,7 @@ module Hintman.Core.Hint
        , showHintType
        , parseHintType
 
-
        , Line (..)
-       , LineChange (..)
-       , Suggestion (..)
        , toLines
        ) where
 
@@ -30,24 +27,11 @@ parseHintType :: Text -> Maybe HintType
 parseHintType = inverseMap showHintType
 {-# INLINE parseHintType #-}
 
-
-
 data Line = Line
     { lineNumber :: !Int
     , lineBody   :: !Text
     } deriving (Eq, Show)
 
-data Suggestion = Suggestion
-    { suggestionFile   :: FilePath
-    , suggestionLine   :: Line
-    , suggestionChange :: LineChange
-    } deriving (Eq, Show)
-
-data LineChange = LineChange
-    { lineChangeNew     :: Text
-    , lineChangeComment :: Maybe Text
-    , lineChangeType    :: HintType
-    } deriving (Eq, Show)
-
+-- | Convert multiline text to the list of lines.
 toLines :: Text -> [Line]
 toLines = zipWith Line [1..] . lines

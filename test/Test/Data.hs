@@ -5,7 +5,11 @@ module Test.Data
        , pr2
        , pr3
        , pr24
+
+       , runLog
        ) where
+
+import Colog (LoggerT, usingLoggerT)
 
 import Hintman.Core.PrInfo (Owner (..), PrInfo (..), PrNumber (..), Repo (..), Sha (..))
 import Hintman.Diff (fetchGitHubDiff)
@@ -33,3 +37,7 @@ makePr num branch = liftIO (fetchGitHubDiff owner repo num) >>= \case
         , prInfoNumber = num
         , prInfoDelta  = deltas
         }
+
+-- | Helper function to run tests.
+runLog :: LoggerT Message IO a -> IO a
+runLog = usingLoggerT mempty

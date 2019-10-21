@@ -82,6 +82,7 @@ library
                          Hintman.Hint
                            Hintman.Hint.HLint
                            Hintman.Hint.Position
+                           Hintman.Hint.TrailingNewlines
                            Hintman.Hint.TrailingSpaces
 
   build-depends:       aeson ^>= 1.4.4.0
@@ -129,10 +130,12 @@ test-suite hintman-test
   import:              common-options
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
-  other-modules:       Test.Data
-                       Test.HLint
-                       Test.TrailingSpaces
   main-is:             Spec.hs
+  other-modules:       Test.Data
+                       Test.Hint
+                         Test.Hint.HLint
+                         Test.Hint.TrailingNewlines
+                         Test.Hint.TrailingSpaces
 
   build-depends:       co-log
                      , hintman

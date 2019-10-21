@@ -1,8 +1,10 @@
-module Test.HLint
+{- | Tests for the HLint hints.
+-}
+
+module Test.Hint.HLint
        ( hlintSpec
        ) where
 
-import Colog (LoggerT, usingLoggerT)
 import Test.Hspec (Spec, describe, it, shouldBe, shouldSatisfy)
 
 import Hintman.Core.Hint (HintType (HLint))
@@ -10,10 +12,8 @@ import Hintman.Core.PrInfo (PrInfo)
 import Hintman.Core.Review (Comment (..))
 import Hintman.Hint (getAllComments)
 
-import Test.Data (pr1, pr2, pr24, pr3)
+import Test.Data (pr1, pr2, pr24, pr3, runLog)
 
-runLog :: LoggerT Message IO a -> IO a
-runLog = usingLoggerT mempty
 
 hlintSpec :: Spec
 hlintSpec = describe "HLint works on opened PRs" $ do
