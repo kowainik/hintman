@@ -12,36 +12,37 @@ import Hintman.Core.PrInfo (PrInfo)
 import Hintman.Core.Review (Comment (..))
 import Hintman.Hint (getAllComments)
 
-import Test.Data (pr1, pr2, pr24, pr3, runLog)
+import Test.Data (Prs (..), runLog)
 
 
-hlintSpec :: Spec
-hlintSpec = describe "HLint works on opened PRs" $ do
+hlintSpec :: Prs -> Spec
+hlintSpec Prs{..} = describe "HLint works on opened PRs" $ do
     it "works with non-code PRs for PR 1" $
-        pr1 >>= runLog . runHLint >>= shouldBe []
+        runHLint pr1 >>= shouldBe []
     it "ignores parse errors for PR 3" $
-        pr3 >>= runLog . runHLint >>= shouldBe []
+        runHLint pr3 >>= shouldBe []
     it "creates correct eta-reduce comment for PR 2" $
-        pr2 >>= runLog . runHLint >>= (`shouldSatisfy` (etaComment `elem`))
+        runHLint pr2 >>= (`shouldSatisfy` (etaComment `elem`))
     it "creates correct part line comment for PR 2" $
-        pr2 >>= runLog . runHLint >>= (`shouldSatisfy` (avoidLambdaComment `elem`))
+        runHLint pr2 >>= (`shouldSatisfy` (avoidLambdaComment `elem`))
     it "creates remove line comment for PR 2" $
-        pr2 >>= runLog . runHLint >>= (`shouldSatisfy` (removePragmaComment `elem`))
+        runHLint pr2 >>= (`shouldSatisfy` (removePragmaComment `elem`))
     it "creates multiline comment for PR 2" $
-        pr2 >>= runLog . runHLint >>= (`shouldSatisfy` (multilineComment `elem`))
+        runHLint pr2 >>= (`shouldSatisfy` (multilineComment `elem`))
     it "creates redundant parens comment for PR 2" $
-        pr2 >>= runLog . runHLint >>= (`shouldSatisfy` (redundantParenComment `elem`))
+        runHLint pr2 >>= (`shouldSatisfy` (redundantParenComment `elem`))
     it "creates redundant do comment for PR 2" $
-        pr2 >>= runLog . runHLint >>= (`shouldSatisfy` (redundantDoComment `elem`))
+        runHLint pr2 >>= (`shouldSatisfy` (redundantDoComment `elem`))
     it "creates redundant $ comment for PR 2" $
-        pr2 >>= runLog . runHLint >>= (`shouldSatisfy` (redundantDollarComment `elem`))
+        runHLint pr2 >>= (`shouldSatisfy` (redundantDollarComment `elem`))
     it "creates <$> over fmap comment for PR 2" $
-        pr2 >>= runLog . runHLint >>= (`shouldSatisfy` (fmapComment `elem`))
+        runHLint pr2 >>= (`shouldSatisfy` (fmapComment `elem`))
     it "redundant () in one line diff for PR 24" $
-        pr24 >>= runLog . runHLint >>= (`shouldBe` removeParensComment)
+        runHLint pr24 >>= (`shouldBe` removeParensComment)
   where
-    runHLint :: (MonadIO m, WithLog env m) => PrInfo -> m [Comment]
-    runHLint prInfo = filter ((==) HLint . commentHintType) <$> getAllComments prInfo
+    runHLint :: PrInfo -> IO [Comment]
+    runHLint prInfo = filter ((==) HLint . commentHintType)
+        <$> runLog (getAllComments prInfo)
 
     mkComment :: Text -> Int -> Text -> Comment
     mkComment fileName pos txt = Comment

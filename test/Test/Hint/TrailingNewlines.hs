@@ -9,22 +9,23 @@ import Hintman.Core.PrInfo (PrInfo)
 import Hintman.Core.Review (Comment (..))
 import Hintman.Hint (getAllComments)
 
-import Test.Data (pr2, pr3, pr30, runLog)
+import Test.Data (Prs (..), runLog)
 
 
-trailingNewlinesSpec :: Spec
-trailingNewlinesSpec = describe "Trailing Newlines are removed on opened PRs" $ do
+trailingNewlinesSpec :: Prs -> Spec
+trailingNewlinesSpec Prs{..} = describe "Trailing Newlines are removed on opened PRs" $ do
     it "removes last trailing newline with spaces" $
-        pr2 >>= runLog . run >>= (`shouldSatisfy` (lastLineComment `elem`))
+        run pr2 >>= (`shouldSatisfy` (lastLineComment `elem`))
     it "removes pred-last trailing newline" $
-        pr2 >>= runLog . run >>= (`shouldSatisfy` (predLastLineComment `elem`))
+        run pr2 >>= (`shouldSatisfy` (predLastLineComment `elem`))
     it "doesn't produce comment on other PRs" $
-        pr3 >>= runLog . run >>= shouldBe []
+        run pr3 >>= shouldBe []
     it "removes trailing newline not from the first hunk in PR 30" $
-        pr30 >>= runLog . run >>= (`shouldSatisfy` (secondHunkComment `elem`))
+        run pr30 >>= (`shouldSatisfy` (secondHunkComment `elem`))
  where
-    run :: (MonadIO m, WithLog env m) => PrInfo -> m [Comment]
-    run prInfo = filter ((==) TrailingNewlines . commentHintType) <$> getAllComments prInfo
+    run :: PrInfo -> IO [Comment]
+    run prInfo = filter ((==) TrailingNewlines . commentHintType)
+        <$> runLog (getAllComments prInfo)
 
     mkComment :: Text -> Int -> Comment
     mkComment file pos = Comment

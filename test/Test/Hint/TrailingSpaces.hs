@@ -12,20 +12,21 @@ import Hintman.Core.PrInfo (PrInfo)
 import Hintman.Core.Review (Comment (..))
 import Hintman.Hint (getAllComments)
 
-import Test.Data (pr1, pr2, pr3, runLog)
+import Test.Data (Prs (..), runLog)
 
 
-trailingSpacesSpec :: Spec
-trailingSpacesSpec = describe "Trailing Spaces are removed on opened PRs" $ do
+trailingSpacesSpec :: Prs -> Spec
+trailingSpacesSpec Prs{..} = describe "Trailing Spaces are removed on opened PRs" $ do
     it "outlines trailing spaces in non-Haskell files" $
-        pr1 >>= runLog . run >>= (`shouldSatisfy` (readmeComment `elem`))
+        run pr1 >>= (`shouldSatisfy` (readmeComment `elem`))
     it "outlines trailing spaces in Haskell files" $
-        pr2 >>= runLog . run >>= (`shouldSatisfy` (mainComment `elem`))
+        run pr2 >>= (`shouldSatisfy` (mainComment `elem`))
     it "doesn't produce comment on other PRs" $
-        pr3 >>= runLog . run >>= shouldBe []
+        run pr3 >>= shouldBe []
  where
-    run :: (MonadIO m, WithLog env m) => PrInfo -> m [Comment]
-    run prInfo = filter ((==) TrailingSpaces . commentHintType) <$> getAllComments prInfo
+    run :: PrInfo -> IO [Comment]
+    run prInfo = filter ((==) TrailingSpaces . commentHintType)
+        <$> runLog (getAllComments prInfo)
 
     mkComment :: Text -> Int -> Text -> Comment
     mkComment file pos txt = Comment
