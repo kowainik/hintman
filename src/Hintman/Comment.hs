@@ -57,8 +57,4 @@ submitReview (GitHubToken token) PrInfo{..} comments = do
             [ if null comments
               then "There is no place for me here... I will choose the truth I like."
               else "Do you know why your PR is still not approved? Because I chose not to approve it. But they will."
-            , ""
-            , "<hr>"
-            , ""
-            , "Reviewed by [Hintman](https://github.com/apps/hint-man)"
             ]

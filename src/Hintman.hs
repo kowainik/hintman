@@ -5,6 +5,7 @@ module Hintman
        ) where
 
 import Colog (Msg (..), cfilter, richMessageAction)
+import Control.Concurrent (forkIO, threadDelay)
 import Data.X509 (PrivKey (PrivKeyRSA))
 import Data.X509.File (readKeyFile)
 import Data.X509.Memory (readKeyFileFromMemory)
@@ -12,7 +13,7 @@ import Network.Wai.Handler.Warp (run)
 import System.Environment (lookupEnv)
 
 import Hintman.App (Env (..), runAppLogIO_)
-import Hintman.Cli (CliArguments (..), cliArguments)
+import Hintman.Cli (Cli (..), cli)
 import Hintman.Core.Key (gitHubKey)
 import Hintman.Core.Token (AppInfo (..))
 import Hintman.Effect.TokenStorage (initialiseInstallationIds)
@@ -22,23 +23,14 @@ import qualified Data.ByteString.Char8 as C8
 
 
 runHintman :: IO ()
-runHintman = cliArguments >>= runOn
-
-
--- | Prints the logging status in this context
-printLoggingStatus :: CliArguments -> IO ()
-printLoggingStatus ctx
-    | cliArgumentsLogging ctx = putTextLn "Logging is enabled"
-    | otherwise               = putTextLn "Logging is disabled"
+runHintman = cli >>= runOn
 
 -- | Runs the program with a given context
-runOn :: CliArguments -> IO ()
-runOn cli = do
-    printLoggingStatus cli
-
+runOn :: Cli -> IO ()
+runOn args = do
     -- get port
     portEnv <- lookupEnv "PORT"
-    let port = fromMaybe 8080 $ (portEnv >>= readMaybe) <|> cliArgumentsPort cli
+    let port = fromMaybe 8080 $ (portEnv >>= readMaybe) <|> cliPort args
 
     let siteString = "https://localhost:" <> show port
     putTextLn ("Starting hintman site at: " <> siteString)
@@ -78,5 +70,9 @@ runOn cli = do
     -- this function changes mutable variable 'envTokenCache'
     -- it's not dangerous but might be surprising
     runAppLogIO_ env initialiseInstallationIds
+
+    when (cliLogging args) $ void $ forkIO $ forever $ runAppLogIO_ env $ do
+        log I "Wake up samurai, we have a PR to review"
+        liftIO $ threadDelay $ 30 * (10 ^ (6 :: Int))
 
     run port (hintmanApp env)

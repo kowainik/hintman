@@ -1,1 +1,1 @@
-web: hintman
+web: hintman --logging

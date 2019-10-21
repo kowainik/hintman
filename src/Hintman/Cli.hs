@@ -1,46 +1,50 @@
+{-# LANGUAGE ApplicativeDo #-}
+
 module Hintman.Cli
-    ( CliArguments(..)
-    , cliArguments
-    ) where
+       ( Cli (..)
+       , cli
+       ) where
 
 import Options.Applicative (Parser, auto, execParser, fullDesc, help, helper, info, long, metavar,
                             option, progDesc, short, showDefault, switch, value)
 
 
 -- | Represents the applicaiton settings
-data CliArguments = CliArguments
-    { cliArgumentsLogging :: Bool
-    , cliArgumentsPort    :: Maybe Int
+data Cli = Cli
+    { cliLogging :: !Bool  -- ^ 'True' if status logging is enabled
+    , cliPort    :: !(Maybe Int)  -- ^ Port to listen
     }
 
-parseCliArguments :: Parser CliArguments
-parseCliArguments = CliArguments
-    <$> parseLogging
-    <*> parsePort
+parseCli :: Parser Cli
+parseCli = do
+    cliLogging <- parseLogging
+    cliPort    <- parsePort
+    pure Cli{..}
   where
-    parseLogging = switch
-        (  long "logging"
+    parseLogging :: Parser Bool
+    parseLogging = switch $
+        long "logging"
         <> short 'l'
-        <> help "Enable logging"
-        )
-    parsePort = optional $ option auto
-        (  long "port"
+        <> help "Enable concurrent status logging"
+
+    parsePort :: Parser (Maybe Int)
+    parsePort = optional $ option auto $
+        long "port"
         <> short 'p'
         <> metavar "PORT_NUMBER"
         <> value 8080
         <> showDefault
         <> help "Configure the port to run on"
-        )
 
 {- | Parse out the arguments from command line arguments
 
 Using this also enabled the program to print out a helpful
 description of the valid command line arguments.
 -}
-cliArguments :: IO CliArguments
-cliArguments = execParser opts
+cli :: IO Cli
+cli = execParser opts
   where
-    opts = info (parseCliArguments <**> helper)
+    opts = info (parseCli <**> helper)
         (  fullDesc
         <> progDesc "Run the Hintman server"
         )
