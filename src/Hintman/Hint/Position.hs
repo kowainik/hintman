@@ -1,3 +1,5 @@
+{-# LANGUAGE BangPatterns #-}
+
 module Hintman.Hint.Position
        ( getTargetCommentPosition
        , (!!?)
@@ -57,19 +59,19 @@ Nothing
 getTargetCommentPosition :: FileDelta -> Int -> Maybe Int
 getTargetCommentPosition FileDelta{..} commentPos = case fileDeltaContent of
     Binary   -> Nothing
-    Hunks hs -> goHunks hs
+    Hunks hs -> goHunks 0 hs
   where
     -- Find the position number i the hunk.
     -- Stops on the first satisfying.
-    goHunks :: [Hunk] -> Maybe Int
-    goHunks [] = Nothing
-    goHunks (Hunk{..}:hs) = case inRange hunkDestRange of
-        Nothing -> goHunks hs
+    goHunks :: Int -> [Hunk] -> Maybe Int
+    goHunks _ [] = Nothing
+    goHunks !acc (Hunk{..}:hs) = case inRange hunkDestRange of
+        Nothing -> goHunks (acc + length hunkLines + 1) hs
         Just diffLine -> do
             (pos, line) <- diffLinePos diffLine hunkLines
             -- Only 'Added' lines.
             guard $ lineAnnotation line == Added
-            Just pos
+            Just $ acc + pos
       where
         -- | Check is the desired line number belongs to this Hunk
         -- and return the corresponding number in the Hunk.

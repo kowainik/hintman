@@ -10,7 +10,7 @@ import Test.Hint.TrailingSpaces (trailingSpacesSpec)
 
 
 hintSpec :: Spec
-hintSpec = describe "Hintmant hints" $ do
+hintSpec = describe "Hintman hints" $ do
     hlintSpec
     trailingNewlinesSpec
     trailingSpacesSpec

@@ -9,7 +9,7 @@ import Hintman.Core.PrInfo (PrInfo)
 import Hintman.Core.Review (Comment (..))
 import Hintman.Hint (getAllComments)
 
-import Test.Data (pr2, pr3, runLog)
+import Test.Data (pr2, pr3, pr30, runLog)
 
 
 trailingNewlinesSpec :: Spec
@@ -20,6 +20,8 @@ trailingNewlinesSpec = describe "Trailing Newlines are removed on opened PRs" $ 
         pr2 >>= runLog . run >>= (`shouldSatisfy` (predLastLineComment `elem`))
     it "doesn't produce comment on other PRs" $
         pr3 >>= runLog . run >>= shouldBe []
+    it "removes trailing newline not from the first hunk in PR 30" $
+        pr30 >>= runLog . run >>= (`shouldSatisfy` (secondHunkComment `elem`))
  where
     run :: (MonadIO m, WithLog env m) => PrInfo -> m [Comment]
     run prInfo = filter ((==) TrailingNewlines . commentHintType) <$> getAllComments prInfo
@@ -40,3 +42,6 @@ trailingNewlinesSpec = describe "Trailing Newlines are removed on opened PRs" $ 
 
     predLastLineComment :: Comment
     predLastLineComment = mkComment "Main.hs" 31
+
+    secondHunkComment :: Comment
+    secondHunkComment = mkComment "BigExample.hs" 13
