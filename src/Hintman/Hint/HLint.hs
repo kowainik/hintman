@@ -81,7 +81,7 @@ createCommentText content Idea{..} = do
     guard $ ideaSeverity /= Ignore
     newLine <- buildWholeLine to
     Just $ Hint
-        { hintHeader = if ideaHint == "" then "" else show ideaSeverity <> ": " <> toText ideaHint
+        { hintHeader = if ideaHint == "" then "" else bold ideaSeverity <> ": " <> toText ideaHint
         , hintBody = newLine
         , hintIsSuggestion = isOneLiner
         , hintNote = showNotes ideaNote
@@ -94,6 +94,9 @@ createCommentText content Idea{..} = do
 
     isOneLiner :: Bool
     isOneLiner = startLine == endLine
+
+    bold :: Show a => a -> Text
+    bold a = "**" <> show a <> "**"
 
     -- Replace only relevant part of the line.
     buildWholeLine :: String -> Maybe Text

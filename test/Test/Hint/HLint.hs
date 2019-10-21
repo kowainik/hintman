@@ -65,7 +65,7 @@ hlintSpec Prs{..} = describe "HLint works on opened PRs" $ do
 
     etaComment :: Comment
     etaComment = mkMainComment 10 Hint
-        { hintHeader = "Warning: Eta reduce"
+        { hintHeader = "**Warning**: Eta reduce"
         , hintBody = "greet = (++) \"Hello \""
         , hintIsSuggestion = True
         , ..
@@ -73,7 +73,7 @@ hlintSpec Prs{..} = describe "HLint works on opened PRs" $ do
 
     avoidLambdaComment :: Comment
     avoidLambdaComment = mkMainComment 13 Hint
-        { hintHeader = "Warning: Avoid lambda"
+        { hintHeader = "**Warning**: Avoid lambda"
         , hintBody = "foo a b = (succ) a + b"
         , hintIsSuggestion = True
         , ..
@@ -81,7 +81,7 @@ hlintSpec Prs{..} = describe "HLint works on opened PRs" $ do
 
     removePragmaComment :: Comment
     removePragmaComment = mkMainComment 1 Hint
-        { hintHeader = "Warning: Unused LANGUAGE pragma"
+        { hintHeader = "**Warning**: Unused LANGUAGE pragma"
         , hintBody = ""
         , hintIsSuggestion = True
         , ..
@@ -89,7 +89,7 @@ hlintSpec Prs{..} = describe "HLint works on opened PRs" $ do
 
     multilineComment :: Comment
     multilineComment = mkMainComment 18 Hint
-        { hintHeader = "Warning: Eta reduce"
+        { hintHeader = "**Warning**: Eta reduce"
         , hintBody = "multiline = putStrLn"
         , hintIsSuggestion = False
         , ..
@@ -97,7 +97,7 @@ hlintSpec Prs{..} = describe "HLint works on opened PRs" $ do
 
     redundantParenComment :: Comment
     redundantParenComment = mkMainComment 21 Hint
-        { hintHeader = "Warning: Redundant bracket"
+        { hintHeader = "**Warning**: Redundant bracket"
         , hintBody = "redundantParen x = succ $ x - 1"
         , hintIsSuggestion = True
         , ..
@@ -105,7 +105,7 @@ hlintSpec Prs{..} = describe "HLint works on opened PRs" $ do
 
     redundantDoComment :: Comment
     redundantDoComment = mkMainComment 24 Hint
-        { hintHeader = "Warning: Redundant do"
+        { hintHeader = "**Warning**: Redundant do"
         , hintBody = "redundantDo = putStrLn \"Hello\""
         , hintIsSuggestion = True
         , ..
@@ -113,7 +113,7 @@ hlintSpec Prs{..} = describe "HLint works on opened PRs" $ do
 
     redundantDollarComment :: Comment
     redundantDollarComment = mkMainComment 27 Hint
-        { hintHeader = "Suggestion: Redundant $"
+        { hintHeader = "**Suggestion**: Redundant $"
         , hintBody = "redundantDollar = putStrLn \"<- What is this dollar about?\""
         , hintIsSuggestion = True
         , ..
@@ -121,7 +121,7 @@ hlintSpec Prs{..} = describe "HLint works on opened PRs" $ do
 
     fmapComment :: Comment
     fmapComment = mkMainComment 30 Hint
-        { hintHeader = "Suggestion: Use <$>"
+        { hintHeader = "**Suggestion**: Use <$>"
         , hintBody = "fmapWarn f = f Control.Applicative.<$> foo bar"
         , hintIsSuggestion = True
         , ..
@@ -129,7 +129,7 @@ hlintSpec Prs{..} = describe "HLint works on opened PRs" $ do
 
     removeParensComment :: [Comment]
     removeParensComment = one $ mkBigExampleComment 5 Hint
-        { hintHeader = "Suggestion: Redundant bracket"
+        { hintHeader = "**Suggestion**: Redundant bracket"
         , hintBody = "        pr1 >>= runLog . runHLint >>= shouldBe []"
         , hintIsSuggestion = True
         , ..
@@ -138,13 +138,13 @@ hlintSpec Prs{..} = describe "HLint works on opened PRs" $ do
     manyHunksComment :: [Comment]
     manyHunksComment =
         [ mkBigExampleComment 13 Hint
-            { hintHeader = "Warning: Redundant bracket"
+            { hintHeader = "**Warning**: Redundant bracket"
             , hintBody = "        pr2 >>= runLog . runHLint >>= (`shouldSatisfy` (etaComment `elem`))"
             , hintIsSuggestion = True
             , ..
             }
         , mkBigExampleComment 22 Hint
-            { hintHeader = "Warning: Redundant bracket"
+            { hintHeader = "**Warning**: Redundant bracket"
             , hintBody = "    multilineComment = mkComment 18 $ unlines"
             , hintIsSuggestion = True
             , ..
