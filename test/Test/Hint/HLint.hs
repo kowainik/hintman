@@ -7,12 +7,11 @@ module Test.Hint.HLint
 
 import Test.Hspec (Spec, describe, it, shouldBe, shouldSatisfy)
 
-import Hintman.Core.Hint (HintType (HLint))
+import Hintman.Core.Hint (Hint (..), HintType (HLint))
 import Hintman.Core.PrInfo (PrInfo)
 import Hintman.Core.Review (Comment (..))
-import Hintman.Hint (getAllComments)
 
-import Test.Data (Prs (..), runLog)
+import Test.Data (Prs (..), runWithFilter)
 
 
 hlintSpec :: Prs -> Spec
@@ -41,92 +40,95 @@ hlintSpec Prs{..} = describe "HLint works on opened PRs" $ do
         runHLint pr24 >>= (`shouldBe` removeParensComment)
   where
     runHLint :: PrInfo -> IO [Comment]
-    runHLint prInfo = filter ((==) HLint . commentHintType)
-        <$> runLog (getAllComments prInfo)
+    runHLint = runWithFilter HLint
 
-    mkComment :: Text -> Int -> Text -> Comment
-    mkComment fileName pos txt = Comment
+    mkComment :: Text -> Int -> Hint -> Comment
+    mkComment fileName pos hint = Comment
         { commentPath = fileName
         , commentPosition = pos
-        , commentBody = txt
-        , commentHintType = HLint
+        , commentHint = hint
         }
 
-    mkMainComment :: Int -> Text -> Comment
+    mkMainComment :: Int -> Hint -> Comment
     mkMainComment = mkComment "Main.hs"
 
-    mkBigExampleComment :: Int -> Text -> Comment
+    mkBigExampleComment :: Int -> Hint -> Comment
     mkBigExampleComment = mkComment "BigExample.hs"
 
+    hintType :: HintType
+    hintType = HLint
+
+    hintNote :: Text
+    hintNote = ""
+
     etaComment :: Comment
-    etaComment = mkMainComment 10 $ unlines
-        [ "Warning: Eta reduce"
-        , "```suggestion"
-        , "greet = (++) \"Hello \""
-        , "```"
-        ]
+    etaComment = mkMainComment 10 Hint
+        { hintHeader = "Warning: Eta reduce"
+        , hintBody = "greet = (++) \"Hello \""
+        , hintIsSuggestion = True
+        , ..
+        }
 
     avoidLambdaComment :: Comment
-    avoidLambdaComment = mkMainComment 13 $ unlines
-        [ "Warning: Avoid lambda"
-        , "```suggestion"
-        , "foo a b = (succ) a + b"
-        , "```"
-        ]
+    avoidLambdaComment = mkMainComment 13 Hint
+        { hintHeader = "Warning: Avoid lambda"
+        , hintBody = "foo a b = (succ) a + b"
+        , hintIsSuggestion = True
+        , ..
+        }
 
     removePragmaComment :: Comment
-    removePragmaComment = mkMainComment 1 $ unlines
-        [ "Warning: Unused LANGUAGE pragma"
-        , "```suggestion"
-        , ""
-        , "```"
-        ]
+    removePragmaComment = mkMainComment 1 Hint
+        { hintHeader = "Warning: Unused LANGUAGE pragma"
+        , hintBody = ""
+        , hintIsSuggestion = True
+        , ..
+        }
 
     multilineComment :: Comment
-    multilineComment = mkMainComment 18 $ unlines
-        [ "Warning: Eta reduce"
-        , "```"
-        , "multiline = putStrLn"
-        , "```"
-        ]
+    multilineComment = mkMainComment 18 Hint
+        { hintHeader = "Warning: Eta reduce"
+        , hintBody = "multiline = putStrLn"
+        , hintIsSuggestion = False
+        , ..
+        }
 
     redundantParenComment :: Comment
-    redundantParenComment = mkMainComment 21 $ unlines
-        [ "Warning: Redundant bracket"
-        , "```suggestion"
-        , "redundantParen x = succ $ x - 1"
-        , "```"
-        ]
+    redundantParenComment = mkMainComment 21 Hint
+        { hintHeader = "Warning: Redundant bracket"
+        , hintBody = "redundantParen x = succ $ x - 1"
+        , hintIsSuggestion = True
+        , ..
+        }
 
     redundantDoComment :: Comment
-    redundantDoComment = mkMainComment 24 $ unlines
-        [ "Warning: Redundant do"
-        , "```suggestion"
-        , "redundantDo = putStrLn \"Hello\""
-        , "```"
-        ]
+    redundantDoComment = mkMainComment 24 Hint
+        { hintHeader = "Warning: Redundant do"
+        , hintBody = "redundantDo = putStrLn \"Hello\""
+        , hintIsSuggestion = True
+        , ..
+        }
 
     redundantDollarComment :: Comment
-    redundantDollarComment = mkMainComment 27 $ unlines
-        [ "Suggestion: Redundant $"
-        , "```suggestion"
-        , "redundantDollar = putStrLn \"<- What is this dollar about?\""
-        , "```"
-        ]
+    redundantDollarComment = mkMainComment 27 Hint
+        { hintHeader = "Suggestion: Redundant $"
+        , hintBody = "redundantDollar = putStrLn \"<- What is this dollar about?\""
+        , hintIsSuggestion = True
+        , ..
+        }
 
     fmapComment :: Comment
-    fmapComment = mkMainComment 30 $ unlines
-        [ "Suggestion: Use <$>"
-        , "```suggestion"
-        , "fmapWarn f = f Control.Applicative.<$> foo bar"
-        , "```"
-        ]
+    fmapComment = mkMainComment 30 Hint
+        { hintHeader = "Suggestion: Use <$>"
+        , hintBody = "fmapWarn f = f Control.Applicative.<$> foo bar"
+        , hintIsSuggestion = True
+        , ..
+        }
 
     removeParensComment :: [Comment]
-    removeParensComment = one $ mkBigExampleComment 5 $ unlines
-        [ "Suggestion: Redundant bracket"
-        , "```suggestion"
-        , "        pr1 >>= runLog . runHLint >>= shouldBe []"
-        , "```"
-        ]
-
+    removeParensComment = one $ mkBigExampleComment 5 Hint
+        { hintHeader = "Suggestion: Redundant bracket"
+        , hintBody = "        pr1 >>= runLog . runHLint >>= shouldBe []"
+        , hintIsSuggestion = True
+        , ..
+        }

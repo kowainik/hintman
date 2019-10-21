@@ -5,12 +5,16 @@ module Test.Data
        , repo
 
        , runLog
+       , runWithFilter
        ) where
 
 import Colog (LoggerT, richMessageAction, usingLoggerT)
 
+import Hintman.Core.Hint (Hint (..), HintType)
 import Hintman.Core.PrInfo (Owner (..), PrInfo (..), PrNumber (..), Repo (..), Sha (..))
+import Hintman.Core.Review (Comment (..))
 import Hintman.Diff (fetchGitHubDiff)
+import Hintman.Hint (getAllComments)
 
 
 data Prs = Prs
@@ -52,3 +56,7 @@ makePr num branch = do
 -- | Helper function to run tests.
 runLog :: LoggerT Message IO a -> IO a
 runLog = usingLoggerT mempty
+
+runWithFilter :: HintType -> PrInfo -> IO [Comment]
+runWithFilter ht prInfo = filter ((==) ht . hintType . commentHint)
+    <$> runLog (getAllComments prInfo)

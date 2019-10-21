@@ -2,7 +2,7 @@ module Hintman.Hint.TrailingNewlines
        ( getTrailingNewlinesComments
        ) where
 
-import Hintman.Core.Hint (HintType (TrailingNewlines), Line (..), toLines)
+import Hintman.Core.Hint (Hint (..), HintType (TrailingNewlines), Line (..), toLines)
 import Hintman.Core.PrInfo (ModifiedFile (..))
 import Hintman.Core.Review (Comment (..))
 import Hintman.Hint.Position (getTargetCommentPosition)
@@ -24,8 +24,13 @@ getFileTrailingNewlineComments ModifiedFile{..} = mapMaybe createComment $
     createComment Line{..} = do
         let commentPath = fileNameText
         commentPosition <- getTargetCommentPosition mfDelta lineNumber
-        let commentBody = unlines [ "```suggestion", "```" ]
-        let commentHintType = TrailingNewlines
+        let commentHint = Hint
+                { hintHeader = "Trailing newline"
+                , hintBody = ""
+                , hintIsSuggestion = True
+                , hintNote = ""
+                , hintType = TrailingNewlines
+                }
         Just Comment{..}
 
     fileNameText :: Text

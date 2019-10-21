@@ -11,7 +11,7 @@ module Hintman.Hint.HLint
        ) where
 
 import Language.Haskell.Exts.SrcLoc (srcSpanEnd, srcSpanStart)
-import Language.Haskell.HLint4 (Classify, Hint, Idea (..), Note (..), ParseFlags, Severity (..),
+import Language.Haskell.HLint4 (Classify, Idea (..), Note (..), ParseFlags, Severity (..),
                                 applyHints, autoSettings, defaultParseFlags, findSettings,
                                 getHLintDataDir, parseFlagsAddFixities, parseModuleEx,
                                 readSettingsFile, resolveHints)
@@ -19,13 +19,14 @@ import System.Directory (createDirectoryIfMissing, doesFileExist)
 import System.FilePath (takeExtension, (</>))
 import Text.Diff.Parse.Types (FileDelta)
 
-import Hintman.Core.Hint (HintType (HLint))
+import Hintman.Core.Hint (Hint (..), HintType (HLint))
 import Hintman.Core.PrInfo (ModifiedFile (..))
 import Hintman.Core.Review (Comment (..))
 import Hintman.Download (downloadFile)
 import Hintman.Hint.Position (getTargetCommentPosition, (!!?))
 
 import qualified Data.Text as T
+import qualified Language.Haskell.HLint4 as HLint (Hint)
 
 
 {- | Run @HLint@ on all modified files.
@@ -63,9 +64,8 @@ getFileHLintSuggestions fileName content = do
 -- | Create a 'Comment' from all necessary data.
 createComment :: FileDelta -> FilePath -> Text -> Idea -> Maybe Comment
 createComment fd (toText -> commentPath) content idea = do
-    commentBody <- createCommentText content idea
+    commentHint <- createCommentText content idea
     commentPosition <- getTargetCommentPosition fd commentPos
-    let commentHintType = HLint
     Just Comment{..}
   where
     -- Real line number in the modified file.
@@ -75,15 +75,18 @@ createComment fd (toText -> commentPath) content idea = do
 
 {- | Creates the comment text from the HLint 'Idea's and file content.
 -}
-createCommentText :: Text -> Idea -> Maybe Text
+createCommentText :: Text -> Idea -> Maybe Hint
 createCommentText content Idea{..} = do
     to <- ideaTo
     guard $ ideaSeverity /= Ignore
     newLine <- buildWholeLine to
-    Just $ unlines $
-        (if ideaHint == "" then "" else show ideaSeverity <> ": " <> toText ideaHint)
-        : mkSuggestion newLine
-       ++ [ "Note: " <> n | let n = showNotes ideaNote, n /= ""]
+    Just $ Hint
+        { hintHeader = if ideaHint == "" then "" else show ideaSeverity <> ": " <> toText ideaHint
+        , hintBody = newLine
+        , hintIsSuggestion = isOneLiner
+        , hintNote = showNotes ideaNote
+        , hintType = HLint
+        }
   where
     startLine, startP, endLine, endP :: Int
     (startLine, startP) = srcSpanStart ideaSpan
@@ -91,13 +94,6 @@ createCommentText content Idea{..} = do
 
     isOneLiner :: Bool
     isOneLiner = startLine == endLine
-
-    mkSuggestion :: Text -> [Text]
-    mkSuggestion to =
-        [ "```" <> if isOneLiner then "suggestion" else ""
-        , to
-        , "```"
-        ]
 
     -- Replace only relevant part of the line.
     buildWholeLine :: String -> Maybe Text
@@ -124,7 +120,7 @@ Heroku build and locally. This function does the following:
 customHLintSettings
     :: forall m env .
        (MonadIO m, WithLog env m)
-    => m (ParseFlags, [Classify], Hint)
+    => m (ParseFlags, [Classify], HLint.Hint)
 customHLintSettings = do
     hlintDataDir <- liftIO getHLintDataDir
     let hlintDataFile = hlintDataDir </> "hlint.yaml"
@@ -148,7 +144,7 @@ customHLintSettings = do
             Just file -> writeFileBS hlintPath file
 
     -- copy-pasted from HLint as recommended in the documentation
-    customSettings :: IO (ParseFlags, [Classify], Hint)
+    customSettings :: IO (ParseFlags, [Classify], HLint.Hint)
     customSettings = do
         (fixities, classify, hints) <- findSettings (readSettingsFile $ Just prodDataDir) Nothing
         pure (parseFlagsAddFixities fixities defaultParseFlags, classify, resolveHints hints)

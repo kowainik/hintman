@@ -4,12 +4,11 @@ module Test.Hint.TrailingNewlines
 
 import Test.Hspec (Spec, describe, it, shouldBe, shouldSatisfy)
 
-import Hintman.Core.Hint (HintType (TrailingNewlines))
+import Hintman.Core.Hint (Hint (..), HintType (TrailingNewlines))
 import Hintman.Core.PrInfo (PrInfo)
 import Hintman.Core.Review (Comment (..))
-import Hintman.Hint (getAllComments)
 
-import Test.Data (Prs (..), runLog)
+import Test.Data (Prs (..), runWithFilter)
 
 
 trailingNewlinesSpec :: Prs -> Spec
@@ -24,18 +23,19 @@ trailingNewlinesSpec Prs{..} = describe "Trailing Newlines are removed on opened
         run pr30 >>= (`shouldSatisfy` (secondHunkComment `elem`))
  where
     run :: PrInfo -> IO [Comment]
-    run prInfo = filter ((==) TrailingNewlines . commentHintType)
-        <$> runLog (getAllComments prInfo)
+    run = runWithFilter TrailingNewlines
 
     mkComment :: Text -> Int -> Comment
     mkComment file pos = Comment
         { commentPath = file
         , commentPosition = pos
-        , commentBody = unlines
-            [ "```suggestion"
-            , "```"
-            ]
-        , commentHintType = TrailingNewlines
+        , commentHint = Hint
+            { hintHeader = "Trailing newline"
+            , hintBody = ""
+            , hintIsSuggestion = True
+            , hintNote = ""
+            , hintType = TrailingNewlines
+            }
         }
 
     lastLineComment :: Comment

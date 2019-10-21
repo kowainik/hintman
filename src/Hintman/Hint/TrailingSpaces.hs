@@ -7,7 +7,7 @@ module Hintman.Hint.TrailingSpaces
        ) where
 
 import Data.Text (stripEnd)
-import Hintman.Core.Hint (HintType (TrailingSpaces), Line (..), toLines)
+import Hintman.Core.Hint (Hint (..), HintType (TrailingSpaces), Line (..), toLines)
 import Hintman.Core.PrInfo (ModifiedFile (..))
 import Hintman.Core.Review (Comment (..))
 import Hintman.Hint.Position (getTargetCommentPosition)
@@ -26,8 +26,13 @@ getFileTrailingSpaceComments ModifiedFile{..} = mapMaybe createComment $
     createComment Line{..} = do
         let commentPath = fileNameText
         commentPosition <- getTargetCommentPosition mfDelta lineNumber
-        let commentBody = unlines [ "```suggestion", lineBody, "```" ]
-        let commentHintType = TrailingSpaces
+        let commentHint = Hint
+                { hintHeader = "Trailing spaces"
+                , hintBody = lineBody
+                , hintIsSuggestion = True
+                , hintNote = ""
+                , hintType = TrailingSpaces
+                }
         Just Comment{..}
 
     fileNameText :: Text

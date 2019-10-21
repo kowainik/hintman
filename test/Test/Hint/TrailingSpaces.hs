@@ -7,12 +7,11 @@ module Test.Hint.TrailingSpaces
 
 import Test.Hspec (Spec, describe, it, shouldBe, shouldSatisfy)
 
-import Hintman.Core.Hint (HintType (TrailingSpaces))
+import Hintman.Core.Hint (Hint (..), HintType (TrailingSpaces))
 import Hintman.Core.PrInfo (PrInfo)
 import Hintman.Core.Review (Comment (..))
-import Hintman.Hint (getAllComments)
 
-import Test.Data (Prs (..), runLog)
+import Test.Data (Prs (..), runWithFilter)
 
 
 trailingSpacesSpec :: Prs -> Spec
@@ -25,19 +24,19 @@ trailingSpacesSpec Prs{..} = describe "Trailing Spaces are removed on opened PRs
         run pr3 >>= shouldBe []
  where
     run :: PrInfo -> IO [Comment]
-    run prInfo = filter ((==) TrailingSpaces . commentHintType)
-        <$> runLog (getAllComments prInfo)
+    run = runWithFilter TrailingSpaces
 
     mkComment :: Text -> Int -> Text -> Comment
     mkComment file pos txt = Comment
         { commentPath = file
         , commentPosition = pos
-        , commentBody = unlines
-            [ "```suggestion"
-            , txt
-            , "```"
-            ]
-        , commentHintType = TrailingSpaces
+        , commentHint = Hint
+            { hintHeader = "Trailing spaces"
+            , hintBody = txt
+            , hintIsSuggestion = True
+            , hintNote = ""
+            , hintType = TrailingSpaces
+            }
         }
 
     readmeComment :: Comment

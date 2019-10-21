@@ -1,5 +1,10 @@
+{- | This module contains data types and helpers for work with different types
+of hints.
+-}
 module Hintman.Core.Hint
-       ( HintType (..)
+       ( Hint (..)
+       , formatHint
+       , HintType (..)
        , showHintType
        , parseHintType
 
@@ -10,6 +15,27 @@ module Hintman.Core.Hint
 import Relude.Extra.Enum (inverseMap)
 
 
+-- | Data type to represent the information for comment creation.
+data Hint = Hint
+    { hintHeader       :: !Text  -- ^ Hint text
+    , hintBody         :: !Text  -- ^ New line body
+    , hintIsSuggestion :: !Bool  -- ^ Is this GitHub @suggestion@?
+    , hintNote         :: !Text  -- ^ Additional information
+    , hintType         :: !HintType  -- ^ Type of the hint
+    } deriving stock (Show, Eq)
+
+-- | Formats 'Hint' in the compatible with @GitHub@ way.
+formatHint :: Hint -> Text
+formatHint Hint{..} = unlines $ concat
+    [ [ hintHeader | hintHeader /= ""]
+    , ["```" <> if hintIsSuggestion then "suggestion" else ""]
+    , [ hintBody | hintType /= TrailingNewlines ]
+    , [ "```"]
+    , [ "__Note:__ " <> hintNote | hintNote /= "" ]
+    ]
+
+
+-- | Supported types of the hints.
 data HintType
     = HLint
     | TrailingSpaces

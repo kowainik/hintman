@@ -9,7 +9,7 @@ module Hintman.Core.Review
 
 import Data.Aeson (object, (.=))
 
-import Hintman.Core.Hint (HintType)
+import Hintman.Core.Hint (Hint, formatHint)
 
 
 data PullRequestReview = PullRequestReview
@@ -45,15 +45,12 @@ data Comment = Comment
     , commentPosition :: !Int
 
       -- | Text of the review comment
-    , commentBody     :: !Text
-
-      -- | Type of the hint
-    , commentHintType :: !HintType
+    , commentHint     :: !Hint
     } deriving (Show, Eq)
 
 instance ToJSON Comment where
     toJSON Comment{..} = object
         [ "path"     .= commentPath
         , "position" .= commentPosition
-        , "body"     .= commentBody
+        , "body"     .= formatHint commentHint
         ]
