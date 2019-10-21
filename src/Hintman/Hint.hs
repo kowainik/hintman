@@ -43,15 +43,15 @@ getModifiedFiles
     :: forall m env . (MonadIO m, WithLog env m)
     => PrInfo
     -> m [ModifiedFile]
-getModifiedFiles prInfo@PrInfo{..} = traverse toModifiedFile $ filter ((/=) Deleted . fileDeltaStatus) prInfoDelta
+getModifiedFiles prInfo@PrInfo{..} = fmap catMaybes $ traverse toModifiedFile $ filter ((/=) Deleted . fileDeltaStatus) prInfoDelta
   where
-    toModifiedFile :: FileDelta -> m ModifiedFile
+    toModifiedFile :: FileDelta -> m (Maybe ModifiedFile)
     toModifiedFile mfDelta@FileDelta{..} = do
         let mfPath = toString fileDeltaDestFile
-        -- TODO: store 'ByteString' here instead of 'Maybe ByteString'
-        -- if we can't retrieve file content, can as well just ignore it
-        mfContent <- downloadFile $ createFileDownloadUrl prInfo mfPath
-        pure ModifiedFile{..}
+        maybeContent <- downloadFile $ createFileDownloadUrl prInfo mfPath
+        case maybeContent of
+            Nothing        -> Nothing <$ log I ("Content is empty: " <> fileDeltaDestFile)
+            Just mfContent -> pure $ Just ModifiedFile{..}
 
 {- | Create an URL for downloading file content. The URL is in the following
 form:

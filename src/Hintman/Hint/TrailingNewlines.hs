@@ -15,9 +15,8 @@ getTrailingNewlinesComments :: [ModifiedFile] -> [Comment]
 getTrailingNewlinesComments = foldMap getFileTrailingNewlineComments
 
 getFileTrailingNewlineComments :: ModifiedFile -> [Comment]
-getFileTrailingNewlineComments ModifiedFile{..} = maybeToMonoid $
-    mapMaybe createComment . getTrailingSpaceLines . toLines . decodeUtf8
-    <$> mfContent
+getFileTrailingNewlineComments ModifiedFile{..} = mapMaybe createComment $
+    getTrailingSpaceLines $ toLines $ decodeUtf8 mfContent
   where
     -- TODO: remove duplication with 'getTrailingSpacesComments'
     -- | Create a 'Comment' from all necessary data.
@@ -38,4 +37,3 @@ getTrailingSpaceLines = takeWhile isEmptyLine . reverse
   where
     isEmptyLine :: Line -> Bool
     isEmptyLine = T.null . T.strip . lineBody
-

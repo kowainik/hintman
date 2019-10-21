@@ -48,14 +48,9 @@ getFileHLintComments
     :: (MonadIO m, WithLog env m)
     => ModifiedFile
     -> m [Comment]
-getFileHLintComments ModifiedFile{..} = case mfContent of
-    Nothing -> [] <$ log I ("Content is empty: " <> fileNameText)
-    Just (decodeUtf8 -> content) -> do
-        ideas <- getFileHLintSuggestions mfPath content
-        pure $ mapMaybe (createComment mfDelta mfPath content) ideas
-  where
-    fileNameText :: Text
-    fileNameText = toText mfPath
+getFileHLintComments ModifiedFile{..} = let content = decodeUtf8 mfContent in do
+    ideas <- getFileHLintSuggestions mfPath content
+    pure $ mapMaybe (createComment mfDelta mfPath content) ideas
 
 
 getFileHLintSuggestions :: (MonadIO m, WithLog env m) => FilePath -> Text -> m [Idea]
@@ -157,4 +152,3 @@ customHLintSettings = do
     customSettings = do
         (fixities, classify, hints) <- findSettings (readSettingsFile $ Just prodDataDir) Nothing
         pure (parseFlagsAddFixities fixities defaultParseFlags, classify, resolveHints hints)
-

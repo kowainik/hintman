@@ -18,9 +18,8 @@ getTrailingSpacesComments :: [ModifiedFile] -> [Comment]
 getTrailingSpacesComments = foldMap getFileTrailingSpaceComments
 
 getFileTrailingSpaceComments :: ModifiedFile -> [Comment]
-getFileTrailingSpaceComments ModifiedFile{..} = maybeToMonoid $
-    mapMaybe createComment . getTrailingSpaceLines . toLines . decodeUtf8
-    <$> mfContent
+getFileTrailingSpaceComments ModifiedFile{..} = mapMaybe createComment $
+    getTrailingSpaceLines $ toLines $ decodeUtf8 mfContent
   where
     -- | Create a 'Comment' from all necessary data.
     createComment :: Line -> Maybe Comment

@@ -92,6 +92,6 @@ instance ToHttpApiData PrNumber where
 -- | Information about modified file.
 data ModifiedFile = ModifiedFile
     { mfDelta   :: !FileDelta
-    , mfPath    :: !FilePath  -- ^ Path to the destination file
-    , mfContent :: !(Maybe ByteString) -- ^ File content (if retrieved)
+    , mfPath    :: !FilePath    -- ^ Path to the destination file
+    , mfContent :: !ByteString  -- ^ File content
     } deriving (Show)
