@@ -23,7 +23,7 @@ import Hintman.Core.Hint (Hint (..), HintType (HLint))
 import Hintman.Core.PrInfo (ModifiedFile (..))
 import Hintman.Core.Review (Comment (..))
 import Hintman.Download (downloadFile)
-import Hintman.Hint.Position (getTargetCommentPosition, (!!?))
+import Hintman.Hint.Position (getTargetCommentPosition)
 
 import qualified Data.Text as T
 import qualified Language.Haskell.HLint4 as HLint (Hint)

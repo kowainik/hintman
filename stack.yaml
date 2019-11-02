@@ -3,6 +3,7 @@ resolver: lts-14.7
 extra-deps:
   - diff-parse-0.2.1
   - optparse-applicative-0.15.0.0
+  - relude-0.6.0.0
   - servant-github-webhook-0.4.2.0
 
   - github-0.22

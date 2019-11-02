@@ -2,7 +2,6 @@
 
 module Hintman.Hint.Position
        ( getTargetCommentPosition
-       , (!!?)
        ) where
 
 import Text.Diff.Parse.Types (Annotation (..), Content (..), FileDelta (..), Hunk (..), Line (..),
@@ -105,14 +104,3 @@ diffLinePos index =
       (!!? index)
     . filter ((/=) Removed . lineAnnotation . snd)
     . zip [1..]
-
--- | Safe @at@ function.
-(!!?) :: [a] -> Int -> Maybe a
-l !!? index
-    | index < 0 = Nothing
-    | otherwise = f index l
-  where
-    f :: Int -> [a] -> Maybe a
-    f 0 (x:_)  = Just x
-    f i (_:xs) = f (i - 1) xs
-    f _ []     = Nothing
