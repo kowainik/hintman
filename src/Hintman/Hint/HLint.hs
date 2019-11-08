@@ -10,10 +10,10 @@ module Hintman.Hint.HLint
        , createCommentText
        ) where
 
-import Language.Haskell.Exts.SrcLoc (srcSpanEnd, srcSpanStart)
-import Language.Haskell.HLint4 (Classify, Idea (..), Note (..), ParseFlags, Severity (..),
-                                applyHints, autoSettings, defaultParseFlags, findSettings,
-                                getHLintDataDir, parseFlagsAddFixities, parseModuleEx,
+import Language.Haskell.Exts.SrcLoc (SrcLoc (..), srcSpanEnd, srcSpanStart)
+import Language.Haskell.HLint4 (Classify, Idea (..), Note (..), ParseError (..), ParseFlags,
+                                Severity (..), applyHints, autoSettings, defaultParseFlags,
+                                findSettings, getHLintDataDir, parseFlagsAddFixities, parseModuleEx,
                                 readSettingsFile, resolveHints)
 import System.Directory (createDirectoryIfMissing, doesFileExist)
 import System.FilePath (takeExtension, (</>))
@@ -59,7 +59,25 @@ getFileHLintSuggestions fileName content = do
     (flags, classify, hint) <- customHLintSettings
     liftIO (parseModuleEx flags fileName (Just $ toString content)) >>= \case
         Right m -> pure $ applyHints classify hint [m]
-        Left _err -> [] <$ log E "Hlint failed with some error" -- TODO: log err
+        Left err -> do
+            log E $ "Hlint failed with:\n" <> displayParseError err
+            pure []
+
+displayParseError :: ParseError -> Text
+displayParseError ParseError{..} = T.intercalate "\n"
+    [ showSrcLoc parseErrorLocation
+    , toText parseErrorMessage
+    , toText parseErrorContents
+    ]
+  where
+    showSrcLoc :: SrcLoc -> Text
+    showSrcLoc SrcLoc{..} = mconcat
+        [ toText srcFilename
+        , " : line "
+        , show srcLine
+        , ", column "
+        , show srcColumn
+        ]
 
 -- | Create a 'Comment' from all necessary data.
 createComment :: FileDelta -> FilePath -> Text -> Idea -> Maybe Comment
