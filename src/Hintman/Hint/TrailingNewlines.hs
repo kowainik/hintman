@@ -2,10 +2,9 @@ module Hintman.Hint.TrailingNewlines
        ( getTrailingNewlinesComments
        ) where
 
-import Hintman.Core.Hint (Hint (..), HintType (TrailingNewlines), Line (..), toLines)
+import Hintman.Core.Hint (Hint, HintType (TrailingNewlines), Line (..), simpleSuggestion, toLines)
 import Hintman.Core.PrInfo (ModifiedFile (..))
-import Hintman.Core.Review (Comment (..))
-import Hintman.Hint.Position (getTargetCommentPosition)
+import Hintman.Core.Review (Comment (..), createComment)
 
 import qualified Data.Text as T
 
@@ -15,26 +14,15 @@ getTrailingNewlinesComments :: [ModifiedFile] -> [Comment]
 getTrailingNewlinesComments = foldMap getFileTrailingNewlineComments
 
 getFileTrailingNewlineComments :: ModifiedFile -> [Comment]
-getFileTrailingNewlineComments ModifiedFile{..} = mapMaybe createComment $
+getFileTrailingNewlineComments mf@ModifiedFile{..} = mapMaybe spawnComment $
     getTrailingSpaceLines $ toLines $ decodeUtf8 mfContent
   where
-    -- TODO: remove duplication with 'getTrailingSpacesComments'
-    -- | Create a 'Comment' from all necessary data.
-    createComment :: Line -> Maybe Comment
-    createComment Line{..} = do
-        let commentPath = fileNameText
-        commentPosition <- getTargetCommentPosition mfDelta lineNumber
-        let commentHint = Hint
-                { hintHeader = "Trailing newline"
-                , hintBody = ""
-                , hintIsSuggestion = True
-                , hintNote = ""
-                , hintType = TrailingNewlines
-                }
-        Just Comment{..}
+    -- | Spawns a "TrailingNewlines" comment on a given line.
+    spawnComment :: Line -> Maybe Comment
+    spawnComment line = createComment mf line hint
 
-    fileNameText :: Text
-    fileNameText = toText mfPath
+    hint :: Hint
+    hint = simpleSuggestion TrailingNewlines "Trailing newline" ""
 
 -- | Take only empty lines from the end of the file
 getTrailingSpaceLines :: [Line] -> [Line]

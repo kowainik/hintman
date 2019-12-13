@@ -5,11 +5,14 @@ module Hintman.Core.Review
        ( PullRequestReview (..)
        , ReviewEvent (..)
        , Comment (..)
+       , createComment
        ) where
 
 import Data.Aeson (object, (.=))
 
-import Hintman.Core.Hint (Hint, formatHint)
+import Hintman.Core.Hint (Hint, Line (..), formatHint)
+import Hintman.Core.PrInfo (ModifiedFile (..))
+import Hintman.Hint.Position (getTargetCommentPosition)
 
 
 data PullRequestReview = PullRequestReview
@@ -54,3 +57,13 @@ instance ToJSON Comment where
         , "position" .= commentPosition
         , "body"     .= formatHint commentHint
         ]
+
+-- | Create a 'Comment' from all necessary data.
+createComment :: ModifiedFile -> Line -> Hint -> Maybe Comment
+createComment ModifiedFile{..} Line{..} commentHint = do
+    let commentPath = fileNameText
+    commentPosition <- getTargetCommentPosition mfDelta lineNumber
+    Just Comment{..}
+  where
+    fileNameText :: Text
+    fileNameText = toText mfPath

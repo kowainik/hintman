@@ -7,6 +7,7 @@ module Hintman.Core.Hint
        , HintType (..)
        , showHintType
        , parseHintType
+       , simpleSuggestion
 
        , Line (..)
        , toLines
@@ -52,6 +53,14 @@ showHintType = \case
 parseHintType :: Text -> Maybe HintType
 parseHintType = inverseMap showHintType
 {-# INLINE parseHintType #-}
+
+-- | Creates a simple suggestion 'Hint' from provided type, title and body (note is omitted).
+simpleSuggestion :: HintType -> Text -> Text -> Hint
+simpleSuggestion hintType hintHeader hintBody = Hint
+    { hintIsSuggestion = True
+    , hintNote = ""
+    , ..
+    }
 
 data Line = Line
     { lineNumber :: !Int

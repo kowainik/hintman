@@ -4,7 +4,7 @@ module Test.Hint.TrailingNewlines
 
 import Test.Hspec (Spec, describe, it, shouldBe, shouldSatisfy)
 
-import Hintman.Core.Hint (Hint (..), HintType (TrailingNewlines))
+import Hintman.Core.Hint (HintType (TrailingNewlines), simpleSuggestion)
 import Hintman.Core.PrInfo (PrInfo)
 import Hintman.Core.Review (Comment (..))
 
@@ -29,13 +29,7 @@ trailingNewlinesSpec Prs{..} = describe "Trailing Newlines are removed on opened
     mkComment file pos = Comment
         { commentPath = file
         , commentPosition = pos
-        , commentHint = Hint
-            { hintHeader = "Trailing newline"
-            , hintBody = ""
-            , hintIsSuggestion = True
-            , hintNote = ""
-            , hintType = TrailingNewlines
-            }
+        , commentHint = simpleSuggestion TrailingNewlines "Trailing newline" ""
         }
 
     lastLineComment :: Comment

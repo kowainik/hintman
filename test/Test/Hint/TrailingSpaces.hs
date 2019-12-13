@@ -7,7 +7,7 @@ module Test.Hint.TrailingSpaces
 
 import Test.Hspec (Spec, describe, it, shouldBe, shouldSatisfy)
 
-import Hintman.Core.Hint (Hint (..), HintType (TrailingSpaces))
+import Hintman.Core.Hint (HintType (TrailingSpaces), simpleSuggestion)
 import Hintman.Core.PrInfo (PrInfo)
 import Hintman.Core.Review (Comment (..))
 
@@ -30,13 +30,7 @@ trailingSpacesSpec Prs{..} = describe "Trailing Spaces are removed on opened PRs
     mkComment file pos txt = Comment
         { commentPath = file
         , commentPosition = pos
-        , commentHint = Hint
-            { hintHeader = "Trailing spaces"
-            , hintBody = txt
-            , hintIsSuggestion = True
-            , hintNote = ""
-            , hintType = TrailingSpaces
-            }
+        , commentHint = simpleSuggestion TrailingSpaces "Trailing spaces" txt
         }
 
     readmeComment :: Comment
