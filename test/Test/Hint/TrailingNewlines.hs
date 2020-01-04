@@ -14,11 +14,11 @@ import Test.Data (Prs (..), runWithFilter)
 trailingNewlinesSpec :: Prs -> Spec
 trailingNewlinesSpec Prs{..} = describe "Trailing Newlines are removed on opened PRs" $ do
     it "removes last trailing newline with spaces" $
-        run pr2 >>= (`shouldSatisfy` (lastLineComment `elem`))
+        run pr3 >>= (`shouldSatisfy` (lastLineComment `elem`))
     it "removes pred-last trailing newline" $
-        run pr2 >>= (`shouldSatisfy` (predLastLineComment `elem`))
+        run pr3 >>= (`shouldSatisfy` (predLastLineComment `elem`))
     it "doesn't produce comment on other PRs" $
-        run pr3 >>= shouldBe []
+        run pr4 >>= shouldBe []
     it "removes trailing newline not from the first hunk in PR 30" $
         run pr30 >>= (`shouldSatisfy` (secondHunkComment `elem`))
  where

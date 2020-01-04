@@ -16,26 +16,26 @@ import Test.Data (Prs (..), runWithFilter)
 
 hlintSpec :: Prs -> Spec
 hlintSpec Prs{..} = describe "HLint works on opened PRs" $ do
-    it "works with non-code PRs for PR 1" $
-        runHLint pr1 >>= shouldBe []
-    it "ignores parse errors for PR 3" $
-        runHLint pr3 >>= shouldBe []
-    it "creates correct eta-reduce comment for PR 2" $
-        runHLint pr2 >>= (`shouldSatisfy` (etaComment `elem`))
-    it "creates correct part line comment for PR 2" $
-        runHLint pr2 >>= (`shouldSatisfy` (avoidLambdaComment `elem`))
-    it "creates remove line comment for PR 2" $
-        runHLint pr2 >>= (`shouldSatisfy` (removePragmaComment `elem`))
-    it "creates multiline comment for PR 2" $
-        runHLint pr2 >>= (`shouldSatisfy` (multilineComment `elem`))
-    it "creates redundant parens comment for PR 2" $
-        runHLint pr2 >>= (`shouldSatisfy` (redundantParenComment `elem`))
-    it "creates redundant do comment for PR 2" $
-        runHLint pr2 >>= (`shouldSatisfy` (redundantDoComment `elem`))
-    it "creates redundant $ comment for PR 2" $
-        runHLint pr2 >>= (`shouldSatisfy` (redundantDollarComment `elem`))
-    it "creates <$> over fmap comment for PR 2" $
-        runHLint pr2 >>= (`shouldSatisfy` (fmapComment `elem`))
+    it "works with non-code PRs for PR 2" $
+        runHLint pr2 >>= shouldBe []
+    it "ignores parse errors for PR 4" $
+        runHLint pr4 >>= shouldBe []
+    it "creates correct eta-reduce comment for PR 3" $
+        runHLint pr3 >>= (`shouldSatisfy` (etaComment `elem`))
+    it "creates correct part line comment for PR 3" $
+        runHLint pr3 >>= (`shouldSatisfy` (avoidLambdaComment `elem`))
+    it "creates remove line comment for PR 3" $
+        runHLint pr3 >>= (`shouldSatisfy` (removePragmaComment `elem`))
+    it "creates multiline comment for PR 3" $
+        runHLint pr3 >>= (`shouldSatisfy` (multilineComment `elem`))
+    it "creates redundant parens comment for PR 3" $
+        runHLint pr3 >>= (`shouldSatisfy` (redundantParenComment `elem`))
+    it "creates redundant do comment for PR 3" $
+        runHLint pr3 >>= (`shouldSatisfy` (redundantDoComment `elem`))
+    it "creates redundant $ comment for PR 3" $
+        runHLint pr3 >>= (`shouldSatisfy` (redundantDollarComment `elem`))
+    it "creates <$> over fmap comment for PR 3" $
+        runHLint pr3 >>= (`shouldSatisfy` (fmapComment `elem`))
     it "redundant () in one line diff for PR 24" $
         runHLint pr24 >>= (`shouldBe` removeParensComment)
     it "correct positions in PR 36 with multiple hunks" $

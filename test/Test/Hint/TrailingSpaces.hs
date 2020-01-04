@@ -17,11 +17,11 @@ import Test.Data (Prs (..), runWithFilter)
 trailingSpacesSpec :: Prs -> Spec
 trailingSpacesSpec Prs{..} = describe "Trailing Spaces are removed on opened PRs" $ do
     it "outlines trailing spaces in non-Haskell files" $
-        run pr1 >>= (`shouldSatisfy` (readmeComment `elem`))
+        run pr2 >>= (`shouldSatisfy` (readmeComment `elem`))
     it "outlines trailing spaces in Haskell files" $
-        run pr2 >>= (`shouldSatisfy` (mainComment `elem`))
+        run pr3 >>= (`shouldSatisfy` (mainComment `elem`))
     it "doesn't produce comment on other PRs" $
-        run pr3 >>= shouldBe []
+        run pr4 >>= shouldBe []
  where
     run :: PrInfo -> IO [Comment]
     run = runWithFilter TrailingSpaces

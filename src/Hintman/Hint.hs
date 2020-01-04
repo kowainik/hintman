@@ -16,6 +16,7 @@ import Hintman.Core.PrInfo (ModifiedFile (..), Owner (..), PrInfo (..), Repo (..
 import Hintman.Core.Review (Comment)
 import Hintman.Download (downloadFile)
 import Hintman.Hint.HLint (getHLintHints)
+import Hintman.Hint.NoNewlineAtFileEnd (getNoNewlineAtFileEndComments)
 import Hintman.Hint.TrailingNewlines (getTrailingNewlinesComments)
 import Hintman.Hint.TrailingSpaces (getTrailingSpacesComments)
 
@@ -32,10 +33,11 @@ getAllComments prInfo = do
     -- 2. Get all suggestions
     let trailingSpaces = getTrailingSpacesComments modFiles
     let trailingNewlines = getTrailingNewlinesComments modFiles
+    let noNewlinesAtFileEnd = getNoNewlineAtFileEndComments modFiles
     hlintHints <- getHLintHints modFiles
 
     -- 3. return combined result
-    pure $ trailingSpaces ++ trailingNewlines ++ hlintHints
+    pure $ trailingSpaces ++ trailingNewlines ++ noNewlinesAtFileEnd ++ hlintHints
 
 
 -- | Get all modified files in the PR.

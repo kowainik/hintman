@@ -41,6 +41,7 @@ data HintType
     = HLint
     | TrailingSpaces
     | TrailingNewlines
+    | NoNewlineAtFileEnd
     deriving (Eq, Read, Show, Bounded, Enum)
 
 showHintType :: HintType -> Text
@@ -48,6 +49,7 @@ showHintType = \case
     HLint            -> "hlint"
     TrailingSpaces   -> "trailing-spaces"
     TrailingNewlines -> "trailing-newlines"
+    NoNewlineAtFileEnd -> "no-newline-at-file-end"
 {-# INLINE showHintType #-}
 
 parseHintType :: Text -> Maybe HintType

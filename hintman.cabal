@@ -81,6 +81,7 @@ library
 
                          Hintman.Hint
                            Hintman.Hint.HLint
+                           Hintman.Hint.NoNewlineAtFileEnd
                            Hintman.Hint.Position
                            Hintman.Hint.TrailingNewlines
                            Hintman.Hint.TrailingSpaces
@@ -136,6 +137,7 @@ test-suite hintman-test
                          Test.Hint.HLint
                          Test.Hint.TrailingNewlines
                          Test.Hint.TrailingSpaces
+                         Test.Hint.NoNewlineAtFileEnd
 
   build-depends:       co-log
                      , hintman
