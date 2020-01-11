@@ -17,8 +17,11 @@ module Hintman.Core.PrInfo
        ) where
 
 import Data.Aeson (withObject, (.:))
+import Data.Vector (Vector)
 import Servant (ToHttpApiData (..))
 import Text.Diff.Parse.Types (FileDelta, FileDeltas)
+
+import Hintman.Core.Hint (Line)
 
 import qualified Data.Text as T
 
@@ -92,6 +95,7 @@ instance ToHttpApiData PrNumber where
 -- | Information about modified file.
 data ModifiedFile = ModifiedFile
     { mfDelta   :: !FileDelta
-    , mfPath    :: !FilePath    -- ^ Path to the destination file
-    , mfContent :: !ByteString  -- ^ File content
+    , mfPath    :: !FilePath       -- ^ Path to the destination file.
+    , mfContent :: !Text           -- ^ File content decoded to utf-8.
+    , mfLines   :: !(Vector Line)  -- ^ File content split to lines.
     } deriving (Show)

@@ -10,8 +10,9 @@ module Hintman.Hint
        ( getAllComments
        ) where
 
-import Text.Diff.Parse.Types (FileDelta (..), FileStatus (..))
+import Text.Diff.Parse.Types (Content (..), FileDelta (..), FileStatus (..))
 
+import Hintman.Core.Hint (toLines)
 import Hintman.Core.PrInfo (ModifiedFile (..), Owner (..), PrInfo (..), Repo (..), Sha (..))
 import Hintman.Core.Review (Comment)
 import Hintman.Download (downloadFile)
@@ -45,15 +46,22 @@ getModifiedFiles
     :: forall m env . (MonadIO m, WithLog env m)
     => PrInfo
     -> m [ModifiedFile]
-getModifiedFiles prInfo@PrInfo{..} = fmap catMaybes $ traverse toModifiedFile $ filter ((/=) Deleted . fileDeltaStatus) prInfoDelta
+getModifiedFiles prInfo@PrInfo{..} = fmap catMaybes $ traverse toModifiedFile $ filesForReview prInfoDelta
   where
+    -- | Sifts diffs, removing binary files and files that were removed.
+    filesForReview :: [FileDelta] -> [FileDelta]
+    filesForReview = filter (\file -> (fileDeltaStatus file /= Deleted) && (fileDeltaContent file /= Binary))
+
     toModifiedFile :: FileDelta -> m (Maybe ModifiedFile)
     toModifiedFile mfDelta@FileDelta{..} = do
         let mfPath = toString fileDeltaDestFile
         maybeContent <- downloadFile $ createFileDownloadUrl prInfo mfPath
         case maybeContent of
             Nothing        -> Nothing <$ log I ("Content is empty: " <> fileDeltaDestFile)
-            Just mfContent -> pure $ Just ModifiedFile{..}
+            Just byteContent -> do
+                let mfContent = decodeUtf8 byteContent
+                let mfLines = fromList $ toLines mfContent
+                pure $ Just ModifiedFile{..}
 
 {- | Create an URL for downloading file content. The URL is in the following
 form:

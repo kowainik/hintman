@@ -2,11 +2,14 @@ module Hintman.Hint.NoNewlineAtFileEnd
        ( getNoNewlineAtFileEndComments
        ) where
 
-import Hintman.Core.Hint (Hint, HintType (NoNewlineAtFileEnd), Line (..), simpleSuggestion, toLines)
+import Data.Vector (Vector)
+
+import Hintman.Core.Hint (Hint, HintType (NoNewlineAtFileEnd), Line (..), simpleSuggestion)
 import Hintman.Core.PrInfo (ModifiedFile (..))
 import Hintman.Core.Review (Comment (..), createComment)
 
 import qualified Data.Text as T
+import qualified Data.Vector as V
 
 
 -- | Creates 'Comment's on adding newlines in all modified files.
@@ -19,13 +22,7 @@ getFileNoNewlineAtFileEndComment :: ModifiedFile -> Maybe Comment
 getFileNoNewlineAtFileEndComment mf@ModifiedFile{..} = lastLine >>= spawnComment
   where
     lastLine :: Maybe Line
-    lastLine = maybeGetNonEmptyLastLine fileLines diffText
-
-    diffText :: Text
-    diffText = decodeUtf8 mfContent
-
-    fileLines :: [Line]
-    fileLines = toLines diffText
+    lastLine = maybeGetNonEmptyLastLine mfLines mfContent
 
     {- | Spawns a "NoNewlineAtFileEnd" comment on a given line, suggesting the same
     line, but with '\n' appended. -}
@@ -49,7 +46,7 @@ Otherwise, we take the last line of file and return it.
 An important note here is that result of lines will trim a '\n' symbol from the last line, so
 we can't just check the last symbol of line, we have to check last symbol of raw content).
 -}
-maybeGetNonEmptyLastLine :: [Line] -> Text -> Maybe Line
+maybeGetNonEmptyLastLine :: Vector Line -> Text -> Maybe Line
 maybeGetNonEmptyLastLine mfLines fileContent = do
     -- 1. Get the last symbol of file. If file is empty, the function will be executed no further.
     lastSymbol <- getLastSymbol fileContent
@@ -67,4 +64,4 @@ maybeGetNonEmptyLastLine mfLines fileContent = do
     maybeLineForWarning :: Char -> Maybe Line
     maybeLineForWarning lastChar
         | lastChar == '\n' = Nothing
-        | otherwise = viaNonEmpty last mfLines
+        | otherwise = Just $ V.last mfLines

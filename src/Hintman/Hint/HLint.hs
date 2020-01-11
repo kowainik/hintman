@@ -49,9 +49,9 @@ getFileHLintComments
     :: (MonadIO m, WithLog env m)
     => ModifiedFile
     -> m [Comment]
-getFileHLintComments ModifiedFile{..} = let content = decodeUtf8 mfContent in do
-    ideas <- getFileHLintSuggestions mfPath content
-    pure $ mapMaybe (createComment mfDelta mfPath content) ideas
+getFileHLintComments ModifiedFile{..} = do
+    ideas <- getFileHLintSuggestions mfPath mfContent
+    pure $ mapMaybe (createComment mfDelta mfPath mfContent) ideas
 
 
 getFileHLintSuggestions :: (MonadIO m, WithLog env m) => FilePath -> Text -> m [Idea]

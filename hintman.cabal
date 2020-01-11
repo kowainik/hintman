@@ -113,6 +113,7 @@ library
                      , transformers ^>= 0.5.5.0
                      , unliftio ^>= 0.2
                      , unordered-containers
+                     , vector ^>= 0.12
                      , wai ^>= 3.2
                      , warp ^>= 3.2
                      , x509 ^>= 1.7.5
