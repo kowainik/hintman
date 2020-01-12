@@ -17,8 +17,8 @@ import Language.Haskell.HLint4 (Classify, Idea (..), Note (..), ParseError (..),
                                 readSettingsFile, resolveHints)
 import System.Directory (createDirectoryIfMissing, doesFileExist)
 import System.FilePath (takeExtension, (</>))
-import Text.Diff.Parse.Types (FileDelta)
 
+import Hintman.Core.Delta (Delta)
 import Hintman.Core.Hint (Hint (..), HintType (HLint))
 import Hintman.Core.PrInfo (ModifiedFile (..))
 import Hintman.Core.Review (Comment (..))
@@ -80,10 +80,10 @@ displayParseError ParseError{..} = T.intercalate "\n"
         ]
 
 -- | Create a 'Comment' from all necessary data.
-createComment :: FileDelta -> FilePath -> Text -> Idea -> Maybe Comment
-createComment fd (toText -> commentPath) content idea = do
+createComment :: Delta -> FilePath -> Text -> Idea -> Maybe Comment
+createComment delta (toText -> commentPath) content idea = do
     commentHint <- createCommentText content idea
-    commentPosition <- getTargetCommentPosition fd commentPos
+    commentPosition <- getTargetCommentPosition delta commentPos
     Just Comment{..}
   where
     -- Real line number in the modified file.

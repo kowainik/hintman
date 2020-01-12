@@ -92,7 +92,7 @@ prReviewHook _ ((), ev) = case evPullReqAction ev of
 
         fetchGitHubDiff prInfoOwner prInfoRepo prInfoNumber >>= \case
             Left err -> log E $ "Failed to fetch PR deltas: " <> toText err
-            Right prInfoDelta -> do
+            Right prInfoDeltas -> do
                 let prInfo = PrInfo{..}
                 comments <- getAllComments prInfo
                 token <- itToken <$> acquireInstallationToken prInfoOwner

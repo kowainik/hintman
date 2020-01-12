@@ -19,8 +19,9 @@ module Hintman.Core.PrInfo
 import Data.Aeson (withObject, (.:))
 import Data.Vector (Vector)
 import Servant (ToHttpApiData (..))
-import Text.Diff.Parse.Types (FileDelta, FileDeltas)
+import Text.Diff.Parse.Types (FileDeltas)
 
+import Hintman.Core.Delta (Delta)
 import Hintman.Core.Hint (Line)
 
 import qualified Data.Text as T
@@ -32,7 +33,7 @@ data PrInfo = PrInfo
     , prInfoRepo   :: !Repo
     , prInfoHead   :: !Sha  -- ^ Sha of the HEAD, instead of branch name
     , prInfoNumber :: !PrNumber
-    , prInfoDelta  :: !FileDeltas
+    , prInfoDeltas :: !FileDeltas
     }
 
 newtype Owner = Owner
@@ -94,7 +95,7 @@ instance ToHttpApiData PrNumber where
 
 -- | Information about modified file.
 data ModifiedFile = ModifiedFile
-    { mfDelta   :: !FileDelta
+    { mfDelta   :: !Delta          -- ^ Git diff of this file.
     , mfPath    :: !FilePath       -- ^ Path to the destination file.
     , mfContent :: !Text           -- ^ File content decoded to utf-8.
     , mfLines   :: !(Vector Line)  -- ^ File content split to lines.

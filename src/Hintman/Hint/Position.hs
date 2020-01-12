@@ -4,8 +4,9 @@ module Hintman.Hint.Position
        ( getTargetCommentPosition
        ) where
 
-import Text.Diff.Parse.Types (Annotation (..), Content (..), FileDelta (..), Hunk (..), Line (..),
-                              Range (..))
+import Text.Diff.Parse.Types (Annotation (..), Hunk (..), Line (..), Range (..))
+
+import Hintman.Core.Delta (Delta (..))
 
 
 {- | Line numbers in the file (modified by PR) and in the 'FileDelta' are
@@ -55,10 +56,8 @@ Nothing
 >>> getTargetCommentPosition myFileDelta 5
 Nothing
 -}
-getTargetCommentPosition :: FileDelta -> Int -> Maybe Int
-getTargetCommentPosition FileDelta{..} commentPos = case fileDeltaContent of
-    Binary   -> Nothing
-    Hunks hs -> goHunks 0 hs
+getTargetCommentPosition :: Delta -> Int -> Maybe Int
+getTargetCommentPosition Delta{..} commentPos = goHunks 0 deltaHunks
   where
     -- Find the position number i the hunk.
     -- Stops on the first satisfying.

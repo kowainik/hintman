@@ -54,7 +54,7 @@ makePr num branch = do
             , prInfoRepo   = repo
             , prInfoHead   = branch
             , prInfoNumber = num
-            , prInfoDelta  = deltas
+            , prInfoDeltas = deltas
             }
 
 -- | Helper function to run tests.

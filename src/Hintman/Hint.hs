@@ -10,8 +10,7 @@ module Hintman.Hint
        ( getAllComments
        ) where
 
-import Text.Diff.Parse.Types (Content (..), FileDelta (..), FileStatus (..))
-
+import Hintman.Core.Delta (Delta (..), fromFileDelta)
 import Hintman.Core.Hint (toLines)
 import Hintman.Core.PrInfo (ModifiedFile (..), Owner (..), PrInfo (..), Repo (..), Sha (..))
 import Hintman.Core.Review (Comment)
@@ -46,18 +45,15 @@ getModifiedFiles
     :: forall m env . (MonadIO m, WithLog env m)
     => PrInfo
     -> m [ModifiedFile]
-getModifiedFiles prInfo@PrInfo{..} = fmap catMaybes $ traverse toModifiedFile $ filesForReview prInfoDelta
+getModifiedFiles prInfo@PrInfo{..} =
+    mapMaybeM toModifiedFile $ mapMaybe fromFileDelta prInfoDeltas
   where
-    -- | Sifts diffs, removing binary files and files that were removed.
-    filesForReview :: [FileDelta] -> [FileDelta]
-    filesForReview = filter (\file -> (fileDeltaStatus file /= Deleted) && (fileDeltaContent file /= Binary))
-
-    toModifiedFile :: FileDelta -> m (Maybe ModifiedFile)
-    toModifiedFile mfDelta@FileDelta{..} = do
-        let mfPath = toString fileDeltaDestFile
+    toModifiedFile :: Delta -> m (Maybe ModifiedFile)
+    toModifiedFile mfDelta@Delta{..} = do
+        let mfPath = toString deltaDestFile
         maybeContent <- downloadFile $ createFileDownloadUrl prInfo mfPath
         case maybeContent of
-            Nothing        -> Nothing <$ log I ("Content is empty: " <> fileDeltaDestFile)
+            Nothing -> Nothing <$ log I ("Content is empty: " <> deltaDestFile)
             Just byteContent -> do
                 let mfContent = decodeUtf8 byteContent
                 let mfLines = fromList $ toLines mfContent
